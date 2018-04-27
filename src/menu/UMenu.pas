@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/menu/UMenu.pas $
- * $Id: UMenu.pas 3103 2014-11-22 23:21:19Z k-m_schindler $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UMenu;
@@ -38,6 +35,7 @@ uses
   Math,
   dglOpenGL,
   sdl2,
+  ULanguage,
   UPath,
   UMenuBackground,
   UMenuButton,
@@ -56,17 +54,16 @@ type
   PMenu = ^TMenu;
   TMenu = class
     protected
-      Background:       TMenuBackground;
 
       Interactions:     array of TInteract;
       SelInteraction:   integer;
 
-      ButtonPos:        integer;
       Button:           array of TButton;
 
       SelectsS:         array of TSelectSlide;
       ButtonCollection: array of TButtonCollection;
     public
+      Background:       TMenuBackground;
       Text:        array of TText;
       Statics:     array of TStatic;
       StaticsList: array of TStatic;
@@ -116,7 +113,6 @@ type
       function AddText(X, Y, W: real; Style: integer; Size, ColR, ColG, ColB: real; Align: integer; const Text_: UTF8String; Reflection_: boolean; ReflectionSpacing_: real; Z : real; Writable: boolean): integer; overload;
 
       // button
-      procedure SetButtonLength(Length: cardinal); //Function that Set Length of Button Array in one Step instead of register new Memory for every Button
       function AddButton(ThemeButton: TThemeButton): integer; overload;
       function AddButton(X, Y, W, H: real; const TexName: IPath): integer; overload;
       function AddButton(X, Y, W, H: real; const TexName: IPath; Typ: TTextureType; Reflection: boolean): integer; overload;
@@ -128,16 +124,16 @@ type
       procedure AddButtonText(CustomButton: TButton; AddX, AddY: real; ColR, ColG, ColB: real; Font: integer; Size: integer; Align: integer; const AddText: UTF8String); overload;
 
       // select slide
-      function AddSelectSlide(ThemeSelectS: TThemeSelectSlide; var Data: integer; const Values: array of UTF8String): integer; overload;
+      function AddSelectSlide(ThemeSelectS: TThemeSelectSlide; var Data: integer; const Values: array of UTF8String; Prefix: string = ''): integer; overload;
       function AddSelectSlide(X, Y, W, H, SkipX, SBGW, ColR, ColG, ColB, Int, DColR, DColG, DColB, DInt,
         TColR, TColG, TColB, TInt, TDColR, TDColG, TDColB, TDInt,
         SBGColR, SBGColG, SBGColB, SBGInt, SBGDColR, SBGDColG, SBGDColB, SBGDInt,
         STColR, STColG, STColB, STInt, STDColR, STDColG, STDColB, STDInt: real;
         const TexName: IPath; Typ: TTextureType; const SBGName: IPath; SBGTyp: TTextureType;
         const Caption: UTF8String; var Data: integer): integer; overload;
-      procedure AddSelectSlideOption(const AddText: UTF8String); overload;
-      procedure AddSelectSlideOption(SelectNo: cardinal; const AddText: UTF8String); overload;
-      procedure UpdateSelectSlideOptions(ThemeSelectSlide: TThemeSelectSlide; SelectNum: integer; const Values: array of UTF8String; var Data: integer);
+      procedure AddSelectSlideOption(const AddText: UTF8String; Prefix: string = ''); overload;
+      procedure AddSelectSlideOption(SelectNo: cardinal; const AddText: UTF8String; Prefix: string = ''); overload;
+      procedure UpdateSelectSlideOptions(ThemeSelectSlide: TThemeSelectSlide; SelectNum: integer; const Values: array of UTF8String; var Data: integer; Prefix: string = '');
 
 //      function AddWidget(X, Y : UInt16; WidgetSrc : PSDL_Surface): Int16;
 //      procedure ClearWidgets(MinNumber : Int16);
@@ -149,6 +145,7 @@ type
       function DrawBG: boolean; virtual;
       function DrawFG: boolean; virtual;
       function Draw: boolean; virtual;
+      function ShouldHandleInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown : boolean; out SuppressKey: boolean): boolean; virtual;
       function ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown : boolean): boolean; virtual;
       function ParseMouse(MouseButton: integer; BtnDown: boolean; X, Y: integer): boolean; virtual;
       function InRegion(X, Y: real; A: TMouseOverRect): boolean;
@@ -159,6 +156,8 @@ type
       procedure OnShow; virtual;
       procedure OnShowFinish; virtual;
       procedure OnHide; virtual;
+
+      procedure OnWindowResized(); virtual;
 
       procedure SetAnimationProgress(Progress: real); virtual;
 
@@ -172,6 +171,8 @@ type
       procedure InteractNextRow; virtual; // this is for the options screen, so button down makes sense
       procedure InteractPrevRow; virtual; // this is for the options screen, so button up makes sense
       procedure AddBox(X, Y, W, H: real);
+      procedure InteractMainNextRow(ItemsPerRow: integer); virtual; // this is for the main screen, so button down makes sense
+      procedure InteractMainPrevRow(ItemsPerRow: integer); virtual; // this is for the main screen, so button up makes sense
   end;
 
 function RGBFloatToInt(R, G, B: double): cardinal;
@@ -195,8 +196,8 @@ const
 implementation
 
 uses
+  StrUtils,
   UCommon,
-  UCovers,
   UDisplay,
   UDrawTexture,
   UGraphic,
@@ -241,9 +242,6 @@ begin
   SetLength(Statics, 0);
   SetLength(Button, 0);
 
-  //Set ButtonPos to Autoset Length
-  ButtonPos := -1;
-
   Background := nil;
 
   RightMbESC := true;
@@ -265,8 +263,6 @@ begin
   else
     BackImg.TexNum := 0;
 
-   //Set ButtonPos to Autoset Length
-   ButtonPos := -1;
 end;
 
 constructor TMenu.Create(Back: string; W, H: integer);
@@ -302,29 +298,36 @@ var
   NewNum, NewTyp: integer;
 begin
   // set inactive
+  if(Interaction > -1) then
+  begin
   OldNum := Interactions[Interaction].Num;
   OldTyp := Interactions[Interaction].Typ;
-
-  NewNum := Interactions[Num].Num;
-  NewTyp := Interactions[Num].Typ;
-
-  case OldTyp of
-    iButton:  Button[OldNum].Selected := false;
-    iText:    Text[OldNum].Selected := false;
-    iSelectS: SelectsS[OldNum].Selected := false;
-    //Button Collection Mod
-    iBCollectionChild:
-      begin
-        Button[OldNum].Selected := false;
-      
-        // deselect collection if next button is not from collection
-        if (NewTyp <> iButton) or (Button[NewNum].Parent <> Button[OldNum].Parent) then
-          ButtonCollection[Button[OldNum].Parent-1].Selected := false;
-      end;
   end;
+  if(Num > -1) then
+  begin
+    NewNum := Interactions[Num].Num;
+    NewTyp := Interactions[Num].Typ;
+  end;
+  if(Interaction > -1) then
+  begin
+    case OldTyp of
+      iButton:  Button[OldNum].Selected := false;
+      iText:    Text[OldNum].Selected := false;
+      iSelectS: SelectsS[OldNum].Selected := false;
+      //Button Collection Mod
+      iBCollectionChild:
+        begin
+          Button[OldNum].Selected := false;
 
-  // set active
+          // deselect collection if next button is not from collection
+          if (NewTyp <> iButton) or (Button[NewNum].Parent <> Button[OldNum].Parent) then
+            ButtonCollection[Button[OldNum].Parent-1].Selected := false;
+        end;
+    end;
+  end;
   SelInteraction := Num;
+  if(Num = -1) then exit;
+  // set active
   case NewTyp of
     iButton:  Button[NewNum].Selected := true;
     iText:    Text[NewNum].Selected := true;
@@ -371,7 +374,7 @@ procedure TMenu.AddBackground(ThemedSettings: TThemeBackground);
     I: integer;
   begin
     Result := false;
-  
+
     for I := 0 to High(A) do
       if (A[I] = Piece) then
       begin
@@ -832,19 +835,6 @@ begin
   Result := TextNum;
 end;
 
-//Function that Set Length of Button boolean in one Step instead of register new Memory for every Button
-procedure TMenu.SetButtonLength(Length: cardinal);
-begin
-  if (ButtonPos = -1) and (Length > 0) then
-  begin
-    //Set Length of Button
-    SetLength(Button, Length);
-
-    //Set ButtonPos to start with 0
-    ButtonPos := 0;
-  end;
-end;
-
 // Method to add a button in our TMenu. It returns the assigned ButtonNumber
 function TMenu.AddButton(ThemeButton: TThemeButton): integer;
 var
@@ -926,18 +916,9 @@ function TMenu.AddButton(X, Y, W, H, ColR, ColG, ColB, Int, DColR, DColG, DColB,
                          Reflection: boolean;
 			 ReflectionSpacing, DeSelectReflectionSpacing: real): integer;
 begin
-  // adds button
-  //SetLength is used once to reduce Memory usement
-  if (ButtonPos <> -1) then
-  begin
-    Result := ButtonPos;
-    Inc(ButtonPos)
-  end
-  else //Old Method -> Reserve new Memory for every Button
-  begin
-    Result := Length(Button);
-    SetLength(Button, Result + 1);
-  end;
+  // add button
+  Result := Length(Button);
+  SetLength(Button, Result+1);
 
   // colorize hack
   if (Typ = TEXTURE_TYPE_COLORIZED) then
@@ -1132,6 +1113,35 @@ begin
   else
     Interaction := Int;        // select row above
 
+end;
+
+// Implemented for the Main Menu with n items per row of buttons
+procedure TMenu.InteractMainPrevRow(ItemsPerRow: integer);
+var
+  Int: integer;
+begin
+  // these two procedures just make sense for Main menu.
+  // The number of items per row will be the offset.
+  Int := Interaction - ItemsPerRow;
+
+  //Set Interaction
+  if (Int < 0) or (Int > Length(Interactions) - 1) then
+    Int := Interaction // invalid button, keep current one
+  else
+    Interaction := Int; // select row above
+end;
+
+procedure TMenu.InteractMainNextRow(ItemsPerRow: integer);
+var
+  Int: integer;
+begin
+  Int := Interaction + ItemsPerRow;
+
+  //Set Interaction
+  if (Int < 0) or (Int > Length(Interactions) - 1) then
+    Int := Interaction // invalid button, keep current one
+  else
+    Interaction := Int; // select row above
 end;
 
 procedure TMenu.InteractNext;
@@ -1334,7 +1344,7 @@ begin
   end;
 end;
 
-function TMenu.AddSelectSlide(ThemeSelectS: TThemeSelectSlide; var Data: integer; const Values: array of UTF8String): integer;
+function TMenu.AddSelectSlide(ThemeSelectS: TThemeSelectSlide; var Data: integer; const Values: array of UTF8String; Prefix: string = ''): integer;
 var
   SO: integer;
 begin
@@ -1351,11 +1361,11 @@ begin
     Skin.GetTextureFileName(ThemeSelectS.TexSBG), ThemeSelectS.TypSBG,
     ThemeSelectS.Text, Data);
   for SO := 0 to High(Values) do
-    AddSelectSlideOption(Values[SO]);
+    AddSelectSlideOption(Values[SO], Prefix);
 
   SelectsS[High(SelectsS)].Text.Size := ThemeSelectS.TextSize;
   SelectsS[High(SelectsS)].Text.Y := ThemeSelectS.Y + (ThemeSelectS.H /2 ) - (ThemeSelectS.TextSize / 2);
-  
+
   SelectsS[High(SelectsS)].Texture.Z := ThemeSelectS.Z;
   SelectsS[High(SelectsS)].TextureSBG.Z := ThemeSelectS.Z;
   SelectsS[High(SelectsS)].Tex_SelectS_ArrowL.Z := ThemeSelectS.Z;
@@ -1394,7 +1404,7 @@ begin
   begin
     SelectsS[S].Colorized := false;
     SelectsS[S].Texture := Texture.GetTexture(TexName, Typ);
-    
+
     SelectsS[S].ColR := ColR;
     SelectsS[S].ColG := ColG;
     SelectsS[S].ColB := ColB;
@@ -1403,14 +1413,14 @@ begin
     SelectsS[S].DColG := DColG;
     SelectsS[S].DColB := DColB;
   end;
-  
+
   SelectsS[S].Int := Int;
-  SelectsS[S].DInt := DInt; 
+  SelectsS[S].DInt := DInt;
 
   SelectsS[S].X := X;
   SelectsS[S].Y := Y;
   SelectsS[S].W := W;
-  SelectsS[S].H := H;  
+  SelectsS[S].H := H;
 
   if (SBGTyp = TEXTURE_TYPE_COLORIZED) then
   begin
@@ -1435,7 +1445,7 @@ begin
 
   SelectsS[S].SBGInt := SBGInt;
   SelectsS[S].SBGDInt := SBGDInt;
-  
+
   SelectsS[High(SelectsS)].Tex_SelectS_ArrowL   := Tex_SelectS_ArrowL;
   SelectsS[High(SelectsS)].Tex_SelectS_ArrowL.X := X + W + SkipX;
   SelectsS[High(SelectsS)].Tex_SelectS_ArrowL.Y := Y + (H - Tex_SelectS_ArrowL.H) / 2;
@@ -1527,19 +1537,19 @@ begin
   Result := S;
 end;
 
-procedure TMenu.AddSelectSlideOption(const AddText: UTF8String);
+procedure TMenu.AddSelectSlideOption(const AddText: UTF8String; Prefix: string = '');
 begin
-  AddSelectSlideOption(High(SelectsS), AddText);
+  AddSelectSlideOption(High(SelectsS), AddText, Prefix);
 end;
 
-procedure TMenu.AddSelectSlideOption(SelectNo: cardinal; const AddText: UTF8String);
+procedure TMenu.AddSelectSlideOption(SelectNo: cardinal; const AddText: UTF8String; Prefix: string = '');
 var
   SO: integer;
 begin
   SO := Length(SelectsS[SelectNo].TextOptT);
 
   SetLength(SelectsS[SelectNo].TextOptT, SO + 1);
-  SelectsS[SelectNo].TextOptT[SO] := AddText;
+  SelectsS[SelectNo].TextOptT[SO] := ULanguage.Language.Translate(IfThen(Prefix <> '', ReplaceStr(Prefix+AddText, ' ', '_'), AddText));
 {
   SelectsS[S].SelectedOption := SelectsS[S].SelectOptInt; // refresh
 
@@ -1548,14 +1558,13 @@ begin
 }
 end;
 
-procedure TMenu.UpdateSelectSlideOptions(ThemeSelectSlide: TThemeSelectSlide;
-  SelectNum: integer; const Values: array of UTF8String; var Data: integer);
+procedure TMenu.UpdateSelectSlideOptions(ThemeSelectSlide: TThemeSelectSlide; SelectNum: integer; const Values: array of UTF8String; var Data: integer; Prefix: string = '');
 var
   SO: integer;
 begin
   SetLength(SelectsS[SelectNum].TextOptT, 0);
   for SO := 0 to High(Values) do
-    AddSelectSlideOption(SelectNum, Values[SO]);
+    AddSelectSlideOption(SelectNum, Values[SO], Prefix);
 
   SelectsS[SelectNum].GenLines;
 
@@ -1714,6 +1723,17 @@ begin
   Background.OnFinish;
 end;
 
+procedure TMenu.OnWindowResized;
+begin
+  // nothing
+end;
+
+function TMenu.ShouldHandleInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean; out SuppressKey: boolean): boolean;
+begin
+  // nothing
+  Result := true;
+end;
+
 function TMenu.ParseInput(PressedKey: Cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean;
 begin
   // nothing
@@ -1769,7 +1789,7 @@ begin
           else
             Action := maReturn;
         end
-        {else if (MouseButton = SDL_BUTTON_WHEELDOWN) then
+        else if (MouseButton = SDL_BUTTON_WHEELDOWN) then
         begin //forward on select slide with mousewheel
           if (Interactions[nBut].Typ = iSelectS) then
             Action := maRight;
@@ -1778,7 +1798,7 @@ begin
         begin //backward on select slide with mousewheel
           if (Interactions[nBut].Typ = iSelectS) then
             Action := maLeft;
-        end};
+        end;
       end;
 
         // do the action we have to do ;)

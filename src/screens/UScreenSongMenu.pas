@@ -1,27 +1,25 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/screens/UScreenSongMenu.pas $
- * $Id: UScreenSongMenu.pas 2071 2010-01-12 17:42:41Z s_alexander $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
+
 
 unit UScreenSongMenu;
 
@@ -172,9 +170,8 @@ begin
           end
           else
           begin
-            AudioPlayback.PlaySound(SoundLib.Change);
             ScreenSong.SelectNext;
-            ScreenSong.SetScrollRefresh;
+            ScreenSong.SetScroll(true);
           end;
         end;
       SDLK_LEFT:
@@ -187,9 +184,8 @@ begin
           end
           else
           begin
-            AudioPlayback.PlaySound(SoundLib.Change);
             ScreenSong.SelectPrev;
-            ScreenSong.SetScrollRefresh;
+            ScreenSong.SetScroll(true);
           end;
         end;
 
@@ -364,7 +360,6 @@ begin
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_PLAY');
         Button[1].Text[0].Text := Language.Translate('SONG_MENU_CHANGEPLAYERS');
         Button[2].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_ADD');
-        Button[3].Text[0].Text := Language.Translate('SONG_MENU_EDIT');
         Button[4].Text[0].Text := Language.Translate('SONG_MENU_CANCEL');
       end;
 
@@ -452,7 +447,6 @@ begin
         Button[0].Text[0].Text := Language.Translate('SONG_MENU_PLAY');
         Button[1].Text[0].Text := Language.Translate('SONG_MENU_CHANGEPLAYERS');
         Button[2].Text[0].Text := Language.Translate('SONG_MENU_PLAYLIST_DEL');
-        Button[3].Text[0].Text := Language.Translate('SONG_MENU_EDIT');
       end;
 
     SM_Playlist_Add:
@@ -703,7 +697,7 @@ begin
           Button[2].Visible := true;
           Button[2].Text[0].Text := Language.Translate('SONG_MENU_REFRESH_SCORES_NO_WEB');
           Button[2].Selectable := false;
-          Button[3].Text[0].Text := Theme.Options.Description[9];
+          Button[3].Text[0].Text := Theme.Options.Description[OPTIONS_DESC_INDEX_NETWORK];
           Interaction := 7;
         end;
       end;
@@ -735,7 +729,7 @@ begin
 
         UpdateJukeboxButtons();
 
-        Button[0].Visible := (Ini.TabsAtStartup = 1);
+        Button[0].Visible := (UIni.Ini.Tabs = 1);
         Button[3].Visible := false;
         Button[4].Visible := true;
 
@@ -748,7 +742,7 @@ begin
 
         Button[4].Text[0].Text := Language.Translate('SONG_MENU_START_JUKEBOX');
 
-        if (Ini.TabsAtStartup = 1) then
+        if (UIni.Ini.Tabs = 1) then
           Interaction := 0
         else
           Interaction := 1;
@@ -856,12 +850,6 @@ begin
               //Dummy
             end;
 
-          6: // button 4
-            begin
-              ScreenSong.OpenEditor;
-              Visible := false;
-            end;
-
           7: // button 5
             begin
               // show main menu
@@ -913,7 +901,7 @@ begin
               Visible := False;
 
             end;
-            
+
           6: //Button 4
             begin
               ScreenSong.StartMedley(5, msCalculated);
@@ -995,12 +983,6 @@ begin
           5: // selectslide 3
             begin
               // dummy
-            end;
-
-          6: // button 4
-            begin
-              ScreenSong.OpenEditor;
-              Visible := false;
             end;
         end;
       end;

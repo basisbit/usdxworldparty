@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UFiles.pas $
- * $Id: UFiles.pas 2510 2010-06-13 09:03:10Z tobigun $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UFiles;
@@ -50,7 +47,7 @@ type
  * Throws a TEncodingException if the song's fields cannot be encoded in the
  * requested encoding.
  *}
-function SaveSong(const Song: TSong; const Lines: TLines; const Name: IPath; Relative: boolean): TSaveSongResult;
+function SaveSong(const Song: TSong; const Lines: TLines; const Name: IPath): TSaveSongResult;
 
 implementation
 
@@ -83,13 +80,12 @@ end;
 //--------------------
 // Saves a Song
 //--------------------
-function SaveSong(const Song: TSong; const Lines: TLines; const Name: IPath; Relative: boolean): TSaveSongResult;
+function SaveSong(const Song: TSong; const Lines: TLines; const Name: IPath): TSaveSongResult;
 var
   C:      integer;
   N:      integer;
   S:      AnsiString;
   B:      integer;
-  RelativeSubTime: integer;
   NoteState: AnsiString;
   SongFile: TTextFileStream;
 
@@ -101,25 +97,7 @@ var
     if (not Success) then
       SaveSong := ssrEncodingError;
   end;
-
-  procedure WriteCustomTags;
-    var
-      I: integer;
-      Line: RawByteString;
-  begin
-    for I := 0 to High(Song.CustomTags) do
-    begin
-      Line := EncodeToken(Song.CustomTags[I].Content);
-      if (Length(Song.CustomTags[I].Tag) > 0) then
-        Line := EncodeToken(Song.CustomTags[I].Tag) + ':' + Line;
-
-      SongFile.WriteLine('#' + Line);
-    end;
-
-  end;
-
 begin
-  //  Relative := true; // override (idea - use shift+S to save with relative)
   Result := ssrOK;
 
   try
@@ -138,6 +116,7 @@ begin
       SongFile.WriteLine('#ARTIST:'   + EncodeToken(Song.Artist));
 
       if Song.Creator     <> ''        then SongFile.WriteLine('#CREATOR:'   + EncodeToken(Song.Creator));
+      if Song.Fixer		  <> ''		   then SongFile.WriteLine('#FIXER:'  	 + EncodeToken(Song.Fixer));
       if Song.Edition     <> 'Unknown' then SongFile.WriteLine('#EDITION:'   + EncodeToken(Song.Edition));
       if Song.Genre       <> 'Unknown' then SongFile.WriteLine('#GENRE:'     + EncodeToken(Song.Genre));
       if Song.Language    <> 'Unknown' then SongFile.WriteLine('#LANGUAGE:'  + EncodeToken(Song.Language));
@@ -148,30 +127,18 @@ begin
       if Song.Background.IsSet then    SongFile.WriteLine('#BACKGROUND:'  + EncodeToken(Song.Background.ToUTF8));
       if Song.Video.IsSet      then    SongFile.WriteLine('#VIDEO:'       + EncodeToken(Song.Video.ToUTF8));
 
-      if Song.VideoGAP    <> 0  then    SongFile.WriteLine('#VIDEOGAP:'    + FloatToStr(Song.VideoGAP));
-      if Song.Resolution  <> 4  then    SongFile.WriteLine('#RESOLUTION:'  + IntToStr(Song.Resolution));
-      if Song.NotesGAP    <> 0  then    SongFile.WriteLine('#NOTESGAP:'    + IntToStr(Song.NotesGAP));
-      if Song.Start       <> 0  then    SongFile.WriteLine('#START:'       + FloatToStr(Song.Start));
-      if Song.Finish      <> 0  then    SongFile.WriteLine('#END:'         + IntToStr(Song.Finish));
-      if Relative               then    SongFile.WriteLine('#RELATIVE:yes');
+      if Song.VideoGAP    <> 0.0  then    SongFile.WriteLine('#VIDEOGAP:'    + FloatToStr(Song.VideoGAP));
+      if Song.Start       <> 0.0  then    SongFile.WriteLine('#START:'       + FloatToStr(Song.Start));
+      if Song.Finish      <> 0    then    SongFile.WriteLine('#END:'         + IntToStr(Song.Finish));
 
-      if (Song.Medley.Source=msTag) and not Relative and (Song.Medley.EndBeat - Song.Medley.StartBeat > 0) then
-      //if (Song.Medley.Source=msTag) and not Relative and (Song.Medley.EndBeat - Song.Medley.StartBeat > 0) then
+      if (Song.Medley.Source=msTag) and (Song.Medley.EndBeat - Song.Medley.StartBeat > 0) then
       begin
         SongFile.WriteLine('#MedleyStartBeat:' + IntToStr(Song.Medley.StartBeat));
         SongFile.WriteLine('#MedleyEndBeat:' + IntToStr(Song.Medley.EndBeat));
       end;
 
-      SongFile.WriteLine('#BPM:' + FloatToStr(Song.BPM[0].BPM / 4));
+      SongFile.WriteLine('#BPM:' + FloatToStr(Song.BPM / 4));
       SongFile.WriteLine('#GAP:' + FloatToStr(Song.GAP));
-
-      // write custom header tags
-      WriteCustomTags;
-
-      RelativeSubTime := 0;
-      for B := 1 to High(Song.BPM) do
-        SongFile.WriteLine('B ' + FloatToStr(Song.BPM[B].StartBeat) + ' '
-                                + FloatToStr(Song.BPM[B].BPM/4));
 
       for C := 0 to Lines.High do
       begin
@@ -184,8 +151,10 @@ begin
               ntFreestyle: NoteState := 'F ';
               ntNormal: NoteState := ': ';
               ntGolden: NoteState := '* ';
+              ntRap: NoteState:= 'R ';
+              ntRapGolden: NoteState:='G ';
             end; // case
-            S := NoteState + IntToStr(Start-RelativeSubTime) + ' '
+            S := NoteState + IntToStr(Start) + ' '
                            + IntToStr(Length) + ' '
                            + IntToStr(Tone) + ' '
                            + EncodeToken(Text);
@@ -196,14 +165,7 @@ begin
 
         if C < Lines.High then // don't write end of last sentence
         begin
-          if not Relative then
-            S := '- ' + IntToStr(Lines.Line[C+1].Start)
-          else
-          begin
-            S := '- ' + IntToStr(Lines.Line[C+1].Start - RelativeSubTime) +
-              ' ' + IntToStr(Lines.Line[C+1].Start - RelativeSubTime);
-            RelativeSubTime := Lines.Line[C+1].Start;
-          end;
+          S := '- ' + IntToStr(Lines.Line[C+1].Start);
           SongFile.WriteLine(S);
         end;
       end; // C
@@ -218,4 +180,3 @@ begin
 end;
 
 end.
-

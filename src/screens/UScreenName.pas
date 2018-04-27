@@ -1,27 +1,25 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/screens/UScreenName.pas $
- * $Id: UScreenName.pas 1939 2009-11-09 00:27:55Z s_alexander $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
+
 
 unit UScreenName;
 
@@ -42,10 +40,11 @@ uses
   UFiles,
   md5,
   UMenu,
+  UIni,
   UMusic,
   UNote,
   UScreenScore,
-  UScreenSing,
+  UScreenSingController,
   UScreenTop5,
   ULog,
   UTexture,
@@ -66,6 +65,8 @@ type
       ColorIndex:   integer;
       LevelIndex:   integer;
 
+      PlayerAvatarIID: integer; // interaction ID
+
       AvatarCurrent: real;
       AvatarTarget:  integer;
 
@@ -74,13 +75,13 @@ type
 
       isScrolling: boolean;   // true if avatar flow is about to move
 
-      PlayerCurrent:       array [0..5] of integer;
-      PlayerCurrentText:   array [0..5] of integer;
-      PlayerCurrentAvatar: array [0..5] of integer;
+      PlayerCurrent:       array [0..UIni.IMaxPlayerCount-1] of integer;
+      PlayerCurrentText:   array [0..UIni.IMaxPlayerCount-1] of integer;
+      PlayerCurrentAvatar: array [0..UIni.IMaxPlayerCount-1] of integer;
 
-      PlayerNames:   array [0..5] of UTF8String;
-      PlayerAvatars: array [0..5] of integer;
-      PlayerLevel:   array [0..5] of integer;
+      PlayerNames:   array [0..UIni.IMaxPlayerCount-1] of UTF8String;
+      PlayerAvatars: array [0..UIni.IMaxPlayerCount-1] of integer;
+      PlayerLevel:   array [0..UIni.IMaxPlayerCount-1] of integer;
 
       APlayerColor: array of integer;
 
@@ -88,8 +89,9 @@ type
       PlayerAvatarButtonMD5: array of UTF8String;
     public
       Goto_SingScreen: boolean; //If true then next Screen in SingScreen
-      
+
       constructor Create; override;
+      function ShouldHandleInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean; out SuppressKey: boolean): boolean; override;
       function ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean; override;
       function ParseMouse(MouseButton: integer; BtnDown: boolean; X, Y: integer): boolean; override;
 
@@ -113,8 +115,11 @@ type
       procedure SetPlayerAvatar(Player: integer);
   end;
 
+const
+  PlayerColors: array[0..16] of UTF8String = ('Blue', 'Red', 'Green', 'Yellow', 'Magenta', 'Orange', 'Pink',  'Violet', 'Brown', 'Gray', 'DarkBlue', 'Sky', 'Cyan', 'Flame', 'Orchid', 'Harlequin', 'GreenYellow');
+
 var
-  Num: array[0..5]of integer;
+  Num: array[0..UIni.IMaxPlayerCount-1]of integer;
 
 implementation
 
@@ -122,7 +127,6 @@ uses
   Math,
   UCommon,
   UGraphic,
-  UIni,
   ULanguage,
   UMenuButton,
   UPath,
@@ -152,13 +156,19 @@ begin
     if RightMbESC and (MouseButton = SDL_BUTTON_RIGHT) then
       Result:=ParseInput(SDLK_ESCAPE, 0, true);
 
-    {//scrolling avatars with mousewheel
+    //scrolling avatars with mousewheel
     if (MouseButton = SDL_BUTTON_WHEELDOWN) then
-      ParseInput(SDLK_RIGHT, 0, true)
+    begin
+      if (Interaction = PlayerAvatarIID) then
+        ParseInput(SDLK_RIGHT, 0, true);
+    end
     else if (MouseButton = SDL_BUTTON_WHEELUP) then
-      ParseInput(SDLK_LEFT, 0, true)}
-    {else
-    begin}
+    begin
+      if (Interaction = PlayerAvatarIID) then
+        ParseInput(SDLK_LEFT, 0, true);
+    end
+    else
+    begin
       // click avatars
       // 1st left
       Btn := AvatarTarget - 2;
@@ -223,17 +233,52 @@ begin
           AvatarTarget := PlayerAvatars[PlayerIndex];
         end;
       end;
-    {end;}
+    end;
   end;
-
 end;
 
+function TScreenName.ShouldHandleInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean; out SuppressKey: boolean): boolean;
+begin
+  Result := inherited;
+  // only suppress special keys for now
+  case PressedKey of
+    // Templates for Names Mod
+    SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5, SDLK_F6, SDLK_F7, SDLK_F8, SDLK_F9, SDLK_F10, SDLK_F11, SDLK_F12:
+     if (Button[PlayerName].Selected) then
+     begin
+       SuppressKey := true;
+     end
+     else
+     begin
+       Result := false;
+     end;
+  end;
+end;
 
 function TScreenName.ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean;
-var
-  I: integer;
-  SDL_ModState: word;
-  Col: TRGB;
+  var
+    I: integer;
+    SDL_ModState: word;
+    Col: TRGB;
+
+  procedure HandleNameTemplate(const index: integer);
+  var
+    isAlternate: boolean;
+  begin
+    isAlternate := (SDL_ModState = KMOD_LSHIFT) or (SDL_ModState = KMOD_RSHIFT);
+    isAlternate := isAlternate or (SDL_ModState = KMOD_LALT); // legacy key combination
+
+    if isAlternate then
+    begin
+      Ini.NameTemplate[index] := Button[PlayerName].Text[0].Text;
+    end
+    else
+    begin
+      Button[PlayerName].Text[0].Text := Ini.NameTemplate[index];
+      PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
+    end;
+  end;
+
 begin
   Result := true;
   if (PressedDown) then
@@ -242,9 +287,20 @@ begin
     SDL_ModState := SDL_GetModState and (KMOD_LSHIFT + KMOD_RSHIFT
     + KMOD_LCTRL + KMOD_RCTRL + KMOD_LALT  + KMOD_RALT);
 
-    // check normal keys
-    if (Interaction = 3) and (IsPrintableChar(CharCode)) then
+    if (not Button[PlayerName].Selected) then
     begin
+      // check normal keys
+      case UCS4UpperCase(CharCode) of
+        Ord('Q'):
+          begin
+            Result := false;
+            Exit;
+          end;
+      end;
+    end
+    else if (Interaction = 3) and (IsPrintableChar(CharCode)) then
+    begin
+      // pass printable chars to button
       Button[PlayerName].Text[0].Text := Button[PlayerName].Text[0].Text +
                                           UCS4ToUTF8String(CharCode);
 
@@ -254,127 +310,20 @@ begin
 
     // check special keys
     case PressedKey of
+
       // Templates for Names Mod
-      SDLK_F1:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[0] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[0];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F2:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[1] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[1];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F3:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[2] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[2];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F4:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[3] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[3];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F5:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[4] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[4];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F6:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[5] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[5];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F7:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[6] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[6];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F8:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[7] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[7];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F9:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[8] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[8];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F10:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[9] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[9];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F11:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[10] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[10];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
-      SDLK_F12:
-       if (SDL_ModState = KMOD_LALT) then
-         begin
-           Ini.NameTemplate[11] := Button[PlayerName].Text[0].Text;
-         end
-         else
-         begin
-           Button[PlayerName].Text[0].Text := Ini.NameTemplate[11];
-           PlayerNames[PlayerIndex] := Button[PlayerName].Text[0].Text;
-         end;
+      SDLK_F1: HandleNameTemplate(0);
+      SDLK_F2: HandleNameTemplate(1);
+      SDLK_F3: HandleNameTemplate(2);
+      SDLK_F4: HandleNameTemplate(3);
+      SDLK_F5: HandleNameTemplate(4);
+      SDLK_F6: HandleNameTemplate(5);
+      SDLK_F7: HandleNameTemplate(6);
+      SDLK_F8: HandleNameTemplate(7);
+      SDLK_F9: HandleNameTemplate(8);
+      SDLK_F10: HandleNameTemplate(9);
+      SDLK_F11: HandleNameTemplate(10);
+      SDLK_F12: HandleNameTemplate(11);
 
       SDLK_BACKSPACE:
         begin
@@ -400,8 +349,7 @@ begin
       SDLK_RETURN:
         begin
           Ini.Players := CountIndex;
-          if (Ini.Players >= 0) and (Ini.Players <= 3) then PlayersPlay := Ini.Players + 1;
-          if (Ini.Players = 4) then PlayersPlay := 6;
+          PlayersPlay:= UIni.IPlayersVals[CountIndex];
 
           for I := 1 to PlayersPlay do
           begin
@@ -445,7 +393,7 @@ begin
           //ScreenSing.Free;
 
           ScreenScore := TScreenScore.Create;
-          ScreenSing  := TScreenSing.Create;
+          ScreenSing  := TScreenSingController.Create;
           //
 
           AudioPlayback.PlaySound(SoundLib.Start);
@@ -477,17 +425,19 @@ begin
 
       SDLK_RIGHT:
         begin
-          AudioPlayback.PlaySound(SoundLib.Change);
 
           if (Interaction in [0, 4, 5]) then
             InteractInc;
 
           if (Interaction = 0) then
-            RefreshPlayers();
+            begin
+				RefreshPlayers();
+				AudioPlayback.PlaySound(SoundLib.Option);
+			end;
 
           if (Interaction = 1) then
-          begin
-            if ((PlayerIndex < CountIndex) or ((CountIndex = 4) and (PlayerIndex <= CountIndex))) then
+          begin //TODO: adapt this to new playersize
+              if (PlayerIndex < UIni.IPlayersVals[CountIndex]-1) then
             begin
               PlayerIndex := PlayerIndex + 1;
 
@@ -510,24 +460,28 @@ begin
           begin
             RefreshColor();
             SelectsS[PlayerColor].SetSelect(true);
+			AudioPlayback.PlaySound(SoundLib.Option);
           end;
 
           if (Interaction = 5) then
           begin
             PlayerLevel[PlayerIndex] := LevelIndex;
+			AudioPlayback.PlaySound(SoundLib.Option);
           end;
 
         end;
       SDLK_LEFT:
         begin
-          AudioPlayback.PlaySound(SoundLib.Change);
 
           if (Interaction in [0, 4, 5]) then
             InteractDec;
 
           if (Interaction = 0) then
-            RefreshPlayers();
-
+            begin
+				RefreshPlayers();
+				AudioPlayback.PlaySound(SoundLib.Option);
+			end;
+			
           if (Interaction = 1) then
           begin
             if (PlayerIndex > 0) then
@@ -535,7 +489,7 @@ begin
               PlayerIndex := PlayerIndex - 1;
 
               RefreshProfile();
-
+				
               isScrolling := true;
               AvatarTarget := PlayerAvatars[PlayerIndex];
             end;
@@ -547,17 +501,20 @@ begin
             SetAvatarScroll;
             PlayerAvatars[PlayerIndex] := AvatarTarget;
             SetPlayerAvatar(PlayerIndex);
+			
           end;
 
           if (Interaction = 4) then
           begin
             RefreshColor();
             SelectsS[PlayerColor].SetSelect(true);
+			AudioPlayback.PlaySound(SoundLib.Option);
           end;
 
           if (Interaction = 5) then
           begin
             PlayerLevel[PlayerIndex] := LevelIndex;
+			AudioPlayback.PlaySound(SoundLib.Option);
           end;
         end;
 
@@ -578,8 +535,10 @@ begin
   SetLength(PlayerAvatarButtonMD5, Length(AvatarsList) + 1);
 
   // 1st no-avatar dummy
-  for I := 1 to 6 do
+  for I := 1 to UIni.IMaxPlayerCount do
+  begin
     NoAvatarTexture[I] := Texture.GetTexture(Skin.GetTextureFileName('NoAvatar_P' + IntToStr(I)), TEXTURE_TYPE_TRANSPARENT, $FFFFFF);
+  end;
 
   // create no-avatar
   PlayerAvatarButton[0] := AddButton(Theme.Name.PlayerAvatar);
@@ -627,19 +586,16 @@ end;
 procedure TScreenName.RefreshPlayers();
 var
   Count, I: integer;
-  Col, DesCol: TRGB;
+  DesCol: TRGB;
 begin
 
-  Count := CountIndex;
+  Count := UIni.IPlayersVals[CountIndex];
 
-  if (CountIndex = 4) then
-    Count := 5;
-
-  while (PlayerIndex > CountIndex) do
+  while (PlayerIndex > Count-1) do
     PlayerIndex := PlayerIndex - 1;
 
   // Player Colors
-  for I := Count downto 0 do
+  for I := Count-1 downto 0 do
   begin
     if (Ini.PlayerColor[I] > 0) then
       Num[I] := NoRepeatColors(Ini.PlayerColor[I], I, 1)
@@ -653,24 +609,15 @@ begin
     Statics[PlayerCurrent[I]].Texture.ColB := DesCol.B;
   end;
 
-  for I := 0 to 5 do
+  for I := 0 to UIni.IMaxPlayerCount-1 do
   begin
-    if (Count = 5) then
-    begin
-      Statics[PlayerCurrent[I]].Visible := true;
-      Text[PlayerCurrentText[I]].Visible := true;
-      Statics[PlayerCurrentAvatar[I]].Visible := true;
-    end
-    else
-    begin
-      Statics[PlayerCurrent[I]].Visible := I <= CountIndex;
-      Text[PlayerCurrentText[I]].Visible := I <= CountIndex;
-      Statics[PlayerCurrentAvatar[I]].Visible := I <= CountIndex;
-    end;
+    Statics[PlayerCurrent[I]].Visible := I < Count;
+    Text[PlayerCurrentText[I]].Visible := I < Count;
+    Statics[PlayerCurrentAvatar[I]].Visible := I < Count;
   end;
 
   // list players
-  for I := 0 to Count do
+  for I := 0 to Count -1 do
   begin
     Text[PlayerCurrentText[I]].Text := PlayerNames[I];
     SetPlayerAvatar(I);
@@ -696,29 +643,26 @@ begin
 
   SelectsS[PlayerSelectLevel].SetSelectOpt(PlayerLevel[PlayerIndex]);
 
-  Count := CountIndex;
-
-  if (CountIndex = 4) then
-    Count := 5;
+  Count := UIni.IPlayersVals[CountIndex];
 
   ChangeSelectPlayerPosition(PlayerIndex);
 
   PlayerColorButton(Num[PlayerIndex]);
 
-  Max := Length(IPlayerColorTranslated) - Count;
+  Max := Length(PlayerColors) - Count + 1;
   SetLength(ITmp, Max);
 
   APlayerColor := nil;
   SetLength(APlayerColor, Max);
 
   Index := 0;
-  for I := 0 to High(IPlayerColorTranslated) do
+  for I := 0 to High(PlayerColors) do      //for every color
   begin
     Used := false;
 
-    for J := 0 to Count do
+    for J := 0 to Count -1 do      //for every active player
     begin
-      if (Num[J] - 1 = I) and (J <> PlayerIndex) then
+      if (Num[J] - 1 = I) and (J <> PlayerIndex) then   //check if color is already used for not current player
       begin
         Used := true;
         break;
@@ -727,7 +671,7 @@ begin
 
     if not (Used) then
     begin
-      ITmp[Index] := IPlayerColorTranslated[I];
+      ITmp[Index] := ULanguage.Language.Translate('OPTION_VALUE_'+PlayerColors[I]);
       APlayerColor[Index] := I + 1;
       Index := Index + 1;
     end;
@@ -757,18 +701,15 @@ function TScreenName.NoRepeatColors(ColorP:integer; Interaction:integer; Pos:int
 var
   Z, Count:integer;
 begin
-  Count := CountIndex;
+  Count := UIni.IPlayersVals[CountIndex];
 
-  if (CountIndex = 4) then
-    Count := 5;
-
-  if (ColorP > Length(IPlayerColorTranslated)) then
+  if (ColorP > Length(PlayerColors)) then
     ColorP := NoRepeatColors(1, Interaction, Pos);
 
   if (ColorP <= 0) then
-    ColorP := NoRepeatColors(High(IPlayerColorTranslated), Interaction, Pos);
+    ColorP := NoRepeatColors(High(PlayerColors), Interaction, Pos);
 
-  for Z := Count downto 0 do
+  for Z := Count -1 downto 0 do
   begin
     if (Num[Z] = ColorP) and (Z <> Interaction) then
       ColorP := NoRepeatColors(ColorP + Pos, Interaction, Pos)
@@ -855,7 +796,7 @@ begin
   Theme.Name.SelectPlayersCount.showArrows := true;
   PlayersCount := AddSelectSlide(Theme.Name.SelectPlayersCount, CountIndex, IPlayers);
 
-  for I := 0 to 5 do
+  for I := 0 to UIni.IMaxPlayerCount -1 do
   begin
     PlayerCurrentAvatar[I] := AddStatic(Theme.Name.PlayerSelectAvatar[I]);
     PlayerCurrent[I] := AddStatic(Theme.Name.PlayerSelect[I]);
@@ -865,17 +806,18 @@ begin
   PlayerSelect := AddButton(Theme.Name.PlayerSelectCurrent);
 
   PlayerAvatar := AddButton(Theme.Name.PlayerButtonAvatar);
+  PlayerAvatarIID := High(Interactions);
 
   PlayerName := AddButton(Theme.Name.PlayerButtonName);
   Button[PlayerName].Text[0].Writable := true;
 
   Theme.Name.SelectPlayerColor.oneItemOnly := true;
   Theme.Name.SelectPlayerColor.showArrows := true;
-  PlayerColor := AddSelectSlide(Theme.Name.SelectPlayerColor, ColorIndex, IPlayerColorTranslated);
+  PlayerColor := AddSelectSlide(Theme.Name.SelectPlayerColor, ColorIndex, PlayerColors, 'OPTION_VALUE_');
 
   Theme.Name.SelectPlayerLevel.oneItemOnly := true;
   Theme.Name.SelectPlayerLevel.showArrows := true;
-  PlayerSelectLevel := AddSelectSlide(Theme.Name.SelectPlayerLevel, LevelIndex, IDifficultyTranslated);
+  PlayerSelectLevel := AddSelectSlide(Theme.Name.SelectPlayerLevel, LevelIndex, UIni.IDifficulty, 'OPTION_VALUE_');
 
   isScrolling := false;
 
@@ -918,13 +860,12 @@ end;
 procedure TScreenName.OnShow;
 var
   I: integer;
-  Col: TRGB;
 begin
   inherited;
 
   CountIndex := Ini.Players;
 
-  for I := 0 to 5 do
+  for I := 0 to UIni.IMaxPlayerCount-1 do
   begin
     PlayerNames[I] := Ini.Name[I];
     PlayerLevel[I] := Ini.PlayerLevel[I];
@@ -1030,7 +971,7 @@ begin
         Button[B].Y := Theme.Name.PlayerAvatar.Y;
 
         AvatarCurrent := AvatarTarget;
-        
+
         isScrolling := false;
       end
 

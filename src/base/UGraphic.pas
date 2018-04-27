@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UGraphic.pas $
- * $Id: UGraphic.pas 2339 2010-05-05 07:22:17Z canni0 $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UGraphic;
@@ -34,23 +31,20 @@ interface
 {$I switches.inc}
 
 uses
-  sdl2,
   dglOpenGL,
-  UTexture,
-  TextGL,
-  UConfig,
-  ULog,
   SysUtils,
+  sdl2,
+  TextGL,
+  UDisplay,
+  UCommandLine,
+  UCommon,
   UImage,
-  UCatCovers,
-  USongs,
-  UAvatars,
-  UCovers,
-  UMusic,
+  UIni,
+  ULog,
+  UPathUtils,
   UScreenLoading,
   UScreenMain,
   UScreenName,
-  UScreenLevel,
   UScreenOptions,
   UScreenOptionsGame,
   UScreenOptionsGraphics,
@@ -63,18 +57,15 @@ uses
   UScreenOptionsWebcam,
   UScreenOptionsJukebox,
   UScreenSong,
-  UScreenSing,
+  UScreenSingController,
   UScreenJukebox,
   UScreenJukeboxOptions,
   UScreenJukeboxPlaylist,
   UScreenScore,
   UScreenTop5,
-  UScreenEditSub,
-  UScreenEdit,
-  UScreenEditHeader,
-  UScreenEditConvert,
   UScreenOpen,
   UScreenAbout,
+  UScreenDevelopers,
   USkins,
   UScreenSongMenu,
   UScreenSongJumpto,
@@ -92,10 +83,9 @@ uses
   {Stats Screens}
   UScreenStatMain,
   UScreenStatDetail,
-  {CreditsScreen}
-  UScreenCredits,
   {Popup for errors, etc.}
-  UScreenPopup;
+  UScreenPopup,
+  UTexture;
 
 type
   TRecR = record
@@ -105,11 +95,23 @@ type
     Bottom: real;
   end;
 
+const
+  Mode_Windowed = 0;
+  Mode_Borderless = 1;
+  Mode_Fullscreen = 2;
+
+type
+  FullscreenModes = integer;
+
+
 var
   Screen:         PSDL_Window;
   glcontext:      TSDL_GLContext;
   LoadingThread:  PSDL_Thread;
   Mutex:          PSDL_Mutex;
+
+  CurrentWindowMode:      FullscreenModes;
+  WindowModeDirty:        boolean;
 
   RenderW:    integer;
   RenderH:    integer;
@@ -118,13 +120,16 @@ var
   Screens:    integer;
   ScreenAct:  integer;
   ScreenX:    integer;
+  LastX, LastY:    integer;
+  LastW, LastH:    integer;
+  HasValidPosition:     boolean;
+  HasValidSize:         boolean;
 
   ScreenLoading:      TScreenLoading;
   ScreenMain:         TScreenMain;
   ScreenName:         TScreenName;
-  ScreenLevel:        TScreenLevel;
   ScreenSong:         TScreenSong;
-  ScreenSing:         TScreenSing;
+  ScreenSing:         TScreenSingController;
 
   ScreenJukebox:         TScreenJukebox;
   ScreenJukeboxOptions:  TScreenJukeboxOptions;
@@ -143,12 +148,9 @@ var
   ScreenOptionsNetwork:   TScreenOptionsNetwork;
   ScreenOptionsWebcam:    TScreenOptionsWebcam;
   ScreenOptionsJukebox:   TScreenOptionsJukebox;
-  ScreenEditSub:      TScreenEditSub;
-  ScreenEdit:         TScreenEdit;
-  ScreenEditConvert:  TScreenEditConvert;
-  ScreenEditHeader:   TScreenEditHeader;
   ScreenOpen:         TScreenOpen;
   ScreenAbout:        TScreenAbout;
+  ScreenDevelopers:   TScreenDevelopers;
 
   ScreenSongMenu:     TScreenSongMenu;
   ScreenSongJumpto:     TScreenSongJumpto;
@@ -172,9 +174,6 @@ var
   ScreenStatMain:         TScreenStatMain;
   ScreenStatDetail:       TScreenStatDetail;
 
-  //CreditsScreen
-  ScreenCredits: TScreenCredits;
-
   //popup mod
   ScreenPopupCheck: TScreenPopupCheck;
   ScreenPopupError: TScreenPopupError;
@@ -184,17 +183,30 @@ var
   ScreenPopupScoreDownload: TScreenPopupScoreDownload;
 
   //Notes
-  Tex_Left:        array[1..6] of TTexture;   //rename to tex_note_left
-  Tex_Mid:         array[1..6] of TTexture;   //rename to tex_note_mid
-  Tex_Right:       array[1..6] of TTexture;   //rename to tex_note_right
+  Tex_Left:        array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_note_left
+  Tex_Mid:         array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_note_mid
+  Tex_Right:       array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_note_right
 
-  Tex_plain_Left:  array[1..6] of TTexture;   //rename to tex_notebg_left
-  Tex_plain_Mid:   array[1..6] of TTexture;   //rename to tex_notebg_mid
-  Tex_plain_Right: array[1..6] of TTexture;   //rename to tex_notebg_right
+  Tex_plain_Left:  array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_notebg_left
+  Tex_plain_Mid:   array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_notebg_mid
+  Tex_plain_Right: array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_notebg_right
 
-  Tex_BG_Left:     array[1..6] of TTexture;   //rename to tex_noteglow_left
-  Tex_BG_Mid:      array[1..6] of TTexture;   //rename to tex_noteglow_mid
-  Tex_BG_Right:    array[1..6] of TTexture;   //rename to tex_noteglow_right
+  Tex_BG_Left:     array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_noteglow_left
+  Tex_BG_Mid:      array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_noteglow_mid
+  Tex_BG_Right:    array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_noteglow_right
+
+
+  Tex_Left_Rap:        array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_note_left
+  Tex_Mid_Rap:         array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_note_mid
+  Tex_Right_Rap:       array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_note_right
+
+  Tex_plain_Left_Rap:  array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_notebg_left
+  Tex_plain_Mid_Rap:   array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_notebg_mid
+  Tex_plain_Right_Rap: array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_notebg_right
+
+  Tex_BG_Left_Rap:     array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_noteglow_left
+  Tex_BG_Mid_Rap:      array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_noteglow_mid
+  Tex_BG_Right_Rap:    array[1..UIni.IMaxPlayerCount] of TTexture;   //rename to tex_noteglow_right
 
   Tex_Note_Star:  TTexture;
   Tex_Note_Perfect_Star: TTexture;
@@ -206,7 +218,7 @@ var
 
   Tex_TimeProgress: TTexture;
   Tex_JukeboxTimeProgress: TTexture;
-  
+
   //Sing Bar Mod
   Tex_SingBar_Back:  TTexture;
   Tex_SingBar_Bar:  TTexture;
@@ -218,19 +230,19 @@ var
   //End PhrasenBonus - Line Bonus Mod
 
   //ScoreBG Texs
-  Tex_ScoreBG: array [0..5] of TTexture;
+  Tex_ScoreBG: array [0..UIni.IMaxPlayerCount-1] of TTexture;
 
   //Score Screen Textures
-    Tex_Score_NoteBarLevel_Dark     : array [1..6] of TTexture;
-    Tex_Score_NoteBarRound_Dark     : array [1..6] of TTexture;
+    Tex_Score_NoteBarLevel_Dark     : array [1..UIni.IMaxPlayerCount] of TTexture;
+    Tex_Score_NoteBarRound_Dark     : array [1..UIni.IMaxPlayerCount] of TTexture;
 
-    Tex_Score_NoteBarLevel_Light    : array [1..6] of TTexture;
-    Tex_Score_NoteBarRound_Light    : array [1..6] of TTexture;
+    Tex_Score_NoteBarLevel_Light    : array [1..UIni.IMaxPlayerCount] of TTexture;
+    Tex_Score_NoteBarRound_Light    : array [1..UIni.IMaxPlayerCount] of TTexture;
 
-    Tex_Score_NoteBarLevel_Lightest : array [1..6] of TTexture;
-    Tex_Score_NoteBarRound_Lightest : array [1..6] of TTexture;
+    Tex_Score_NoteBarLevel_Lightest : array [1..UIni.IMaxPlayerCount] of TTexture;
+    Tex_Score_NoteBarRound_Lightest : array [1..UIni.IMaxPlayerCount] of TTexture;
 
-    Tex_Score_Ratings               : array [0..7] of TTexture;
+    Tex_Score_Ratings               : array [0..7] of TTexture;  //stores all possible rating result images
 
   // arrows for SelectSlide
     Tex_SelectS_ArrowL:  TTexture;
@@ -299,33 +311,25 @@ const
 
 procedure Initialize3D (Title: string);
 procedure Finalize3D;
-procedure Reinitialize3D;
 procedure SwapBuffers;
 
 procedure LoadTextures;
-procedure InitializeScreen;
-procedure LoadLoadingScreen;
-procedure LoadScreens(Title: string);
+procedure InitializeScreen(Title: string);
+procedure LoadScreens;
 procedure UnloadScreens;
 
-function LoadingThreadFunction: integer;
+procedure UpdateResolution;
+procedure UpdateVideoMode;
 
+procedure SetVideoMode(Mode: FullscreenModes);
+function SwitchVideoMode(Mode: FullscreenModes): FullscreenModes;
+function HasWindowState(Flag: integer): boolean;
+
+// events
+procedure OnWindowMoved(x,y: integer);
+procedure OnWindowResized(w,h: integer);
 
 implementation
-
-
-uses
-  Classes,
-  UIni,
-  UDisplay,
-  UCommandLine,
-  UPathUtils;
-
-procedure LoadFontTextures;
-begin
-  Log.LogStatus('Building Fonts', 'LoadTextures');
-  BuildFonts;
-end;
 
 procedure UnloadFontTextures;
 begin
@@ -334,14 +338,14 @@ begin
 end;
 
 procedure LoadTextures;
-
 var
   P:       integer;
   R, G, B: real;
   Col:     integer;
 begin
   Log.LogStatus('Loading Textures', 'LoadTextures');
-
+  Texture := TTextureUnit.Create;
+  Texture.Limit := 1920; //currently, Full HD is all we want. switch to 64bit target before going further up
   Log.LogStatus('Loading Textures - A', 'LoadTextures');
 
   Tex_Note_Perfect_Star := Texture.LoadTexture(Skin.GetTextureFileName('NotePerfectStar'), TEXTURE_TYPE_TRANSPARENT, 0);
@@ -420,94 +424,31 @@ begin
       Tex_Score_Ratings[P] := Texture.LoadTexture(Skin.GetTextureFileName('Rating_'+IntToStr(P)), TEXTURE_TYPE_TRANSPARENT, 0);
   end;
 
+  TextGL.BuildFonts; //font textures
   Log.LogStatus('Loading Textures - Done', 'LoadTextures');
 end;
 
 const
-  WINDOW_ICON = 'icons/ultrastardx-icon.png';
+  WINDOW_ICON = 'icons/WorldParty.png';
 
-procedure Initialize3D (Title: string);
-var
-  Icon: PSDL_Surface;
+procedure Initialize3D(Title: string);
 begin
-  Log.LogStatus('SDL_Init', 'UGraphic.Initialize3D');
-  if ( SDL_InitSubSystem(SDL_INIT_VIDEO) = -1 ) then
-  begin
-    Log.LogCritical('SDL_Init Failed', 'UGraphic.Initialize3D');
-  end;
-  InitializeScreen;
-  // load icon image (must be 32x32 for win32)
-  Icon := LoadImage(ResourcesPath.Append(WINDOW_ICON));
-  if (Icon <> nil) then
-    SDL_SetWindowIcon(Screen, Icon);
+  InitializeScreen(Title);
+  LoadTextures();
 
-  SDL_SetWindowTitle(Screen, PChar(Title));
-
-  { workaround for buggy Intel 3D driver on Linux }
-  //SDL_putenv('texture_tiling=false');  //ToDo: on linux, check if this is still necessary with SDL 2
-
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Initializing screen'));
-
-
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Initializing texturizer'));
-  Texture := TTextureUnit.Create;
-  Texture.Limit :=1920; //currently, Full HD is all we want. switch to 64bit target before going further up
-
-  //LoadTextures;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Initializing video modules'));
-  // Note: do not initialize video modules earlier. They might depend on some
-  // SDL video functions or OpenGL extensions initialized in InitializeScreen()
-  InitializeVideo();
-
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Initializing 3D'));
-  Log.LogStatus('TDisplay.Create', 'UGraphic.Initialize3D');
+  //screen loading
+  ScreenLoading := TScreenLoading.Create;
   Display := TDisplay.Create;
-  //Display.SetCursor;
-
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading font textures'));
-  Log.LogStatus('Loading Font Textures', 'UGraphic.Initialize3D');
-  LoadFontTextures();
-
-  // Show the Loading Screen
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading first screen'));
-  Log.LogStatus('Loading Loading Screen', 'UGraphic.Initialize3D');
-  LoadLoadingScreen;
-
-  // Covers Cache
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading and checking songs'));
-  Log.LogStatus('Loading and checking songs', 'UGraphic.Initialize3D');
-  Covers := TCoverDatabase.Create;
-
-  // Category Covers
-  Log.LogStatus('Creating Category Covers Array', 'Initialization');
-  CatCovers:= TCatCovers.Create;
-
-  // Avatars Cache
-  Log.LogStatus('Creating Avatars Cache', 'Initialization');
-  Avatars := TAvatarDatabase.Create;
-
-  // Songs
-  Log.LogStatus('Creating Song Array', 'Initialization');
-  Songs := TSongs.Create;
-
-  Log.LogStatus('Creating 2nd Song Array', 'Initialization');
-  CatSongs := TCatSongs.Create;
-
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading textures'));
-  Log.LogStatus(' Loading Textures', 'UGraphic.Initialize3D');
-  LoadTextures;
+  Display.CurrentScreen := @ScreenLoading;
+  SwapBuffers;
+  ScreenLoading.Draw;
+  SwapBuffers;
 
   // this would be run in the loadingthread
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading screens'));
-  Log.LogStatus(' Loading Screens', 'UGraphic.Initialize3D');
-  LoadScreens(Title);
+  LoadScreens();
 
-  SDL_SetWindowTitle(Screen, PChar(Title));
-  Display.CurrentScreen^.FadeTo( @ScreenMain );
-
-  Log.BenchmarkEnd(2);
+  Display.CurrentScreen^.FadeTo(@ScreenMain);
   Log.LogBenchmark('--> Loading Screens', 2);
-
   Log.LogStatus('Finish', 'Initialize3D');
 end;
 
@@ -515,8 +456,8 @@ procedure SwapBuffers;
 begin
   SDL_GL_SwapWindow(Screen);
   glMatrixMode(GL_PROJECTION);
-    glLoadIdentity;
-    glOrtho(0, RenderW, RenderH, 0, -1, 100);
+  glLoadIdentity;
+  glOrtho(0, RenderW, RenderH, 0, -1, 100);
   glMatrixMode(GL_MODELVIEW);
 end;
 
@@ -526,19 +467,18 @@ begin
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
 end;
 
-procedure Reinitialize3D;
-begin
-  InitializeScreen;
-end;
-
-procedure InitializeScreen;
+procedure InitializeScreen(Title: string);
 var
   S:      string;
-  I:      integer;
   W, H:   integer;
-  Depth:  Integer;
-  Fullscreen: boolean;
+  X, Y:   integer; // offset for re-positioning
+  Borderless, Fullscreen: boolean;
   Split: boolean;
+  Disp: TSDL_DisplayMode;
+
+label
+  NoDoubledResolution;
+
 begin
   if (Params.Screens <> -1) then
     Screens := Params.Screens + 1
@@ -553,44 +493,105 @@ begin
       Split := Ini.Split = 1;
   end; // case
 
-  // If there is a resolution in Parameters, use it, else use the Ini value
-  I := Params.Resolution;
-  if (I <> -1) then
-    S := IResolution[I]
-  else
-    S := IResolution[Ini.Resolution];
-
-  I := Pos('x', S);
-  W := StrToInt(Copy(S, 1, I-1));
-  H := StrToInt(Copy(S, I+1, 1000));
-  if ((Screens > 1) and not Split) then
-  	W := W * Screens;
-
-  Log.LogStatus('SDL_SetVideoMode', 'Initialize3D');
-
-  // check whether to start in fullscreen or windowed mode.
+  // check whether to start in fullscreen, windowed mode or borderless mode (windowed fullscreen).
   // The command-line parameters take precedence over the ini settings.
+  Borderless := (Ini.FullScreen = 2) and (Params.ScreenMode <> scmFullscreen);
   Fullscreen := ((Ini.FullScreen = 1) or (Params.ScreenMode = scmFullscreen)) and
                 not (Params.ScreenMode = scmWindowed);
 
-  if Fullscreen then
+  // If there is a resolution in Parameters, use it, else use the Ini value
+  // check for a custom resolution (in the format of WIDTHxHEIGHT) or try validating ID from TIni
+  if ParseResolutionString(Params.CustomResolution, W, H) then
+    Log.LogStatus(Format('Use custom resolution from Command line: %d x %d', [W, H]), 'SDL_SetVideoMode')
+  else if Ini.GetResolution(Params.Resolution, S) and ParseResolutionString(S, W, H) then
+    Log.LogStatus(Format('Use resolution by index from command line: %d x %d [%d]', [W, H, Params.Resolution]), 'SDL_SetVideoMode')
+  else if Fullscreen then
   begin
-    Log.LogStatus('SDL_SetVideoMode', 'Set Video Mode...   Full Screen');
-    screen := SDL_CreateWindow('UltraStar Deluxe loading...',
-           SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL or SDL_WINDOW_FULLSCREEN_DESKTOP or SDL_WINDOW_RESIZABLE);
+    Log.LogStatus('Use config fullscreen resolution', 'SDL_SetVideoMode');
+    S := Ini.GetResolutionFullscreen(W, H);
+
+    // fullscreen resolution shouldn't be doubled as it would not allow running real fullscreen
+    // in a specific resolution if desired and required for some TVs/monitors/display devices
+    Goto NoDoubledResolution;
   end
   else
   begin
-    Log.LogStatus('SDL_SetVideoMode', 'Set Video Mode...   Windowed');
+    Log.LogStatus('Use config resolution', 'SDL_SetVideoMode');
+    S := Ini.GetResolution(W, H);
+
+    // hackfix to prevent a doubled resolution twice as GetResolution(int,int) is already doubling the resolution
+    Goto NoDoubledResolution;
+  end;
+
+  // hacky fix to support multiplied resolution (in width) in multiple screen setup (Screens=2 and more)
+  // TODO: RattleSN4K3: Improve the way multiplied screen resolution is applied and stored (see UGraphics::InitializeScreen; W := W * Screens)
+  if ((Screens > 1) and not Split) then
+  	W := W * Screens;
+
+NoDoubledResolution:
+
+  Log.LogStatus('Creating window', 'SDL_SetVideoMode');
+
+  // TODO: use SDL renderer (for proper scale in "real fullscreen"). Able to choose rendering mode (OpenGL, OpenGL ES, Direct3D)
+  if Borderless then
+  begin
+    Log.LogStatus('Set Video Mode...   Borderless fullscreen', 'SDL_SetVideoMode');
+    CurrentWindowMode := Mode_Borderless;
     screen := SDL_CreateWindow('UltraStar Deluxe loading...',
-           SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED, W, H, SDL_Window_OPENGL or SDL_WINDOW_RESIZABLE);
+              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL or SDL_WINDOW_FULLSCREEN_DESKTOP or SDL_WINDOW_RESIZABLE);
+  end
+  else if Fullscreen then
+  begin
+    Log.LogStatus('Set Video Mode...   Fullscreen', 'SDL_SetVideoMode');
+    CurrentWindowMode := Mode_Fullscreen;
+    screen := SDL_CreateWindow('UltraStar Deluxe loading...',
+              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, W, H, SDL_WINDOW_OPENGL or SDL_WINDOW_FULLSCREEN or SDL_WINDOW_RESIZABLE);
+  end
+  else
+  begin
+    Log.LogStatus('Set Video Mode...   Windowed', 'SDL_SetVideoMode');
+    CurrentWindowMode := Mode_Windowed;
+    screen := SDL_CreateWindow('UltraStar Deluxe loading...',
+              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_OPENGL or SDL_WINDOW_RESIZABLE);
   end;
 
   //SDL_ShowCursor(0);    just to be able to debug while having mosue cursor
 
   if (screen = nil) then
   begin
-    Log.LogCritical('SDL_SetVideoMode Failed', 'Initialize3D');
+    Log.LogCritical('Creating window failed', 'SDL_SetVideoMode');
+  end
+  else
+  begin
+    X:=0; Y:=0;
+
+    // check if created window has the desired size, otherwise override the config resolution value
+    if SDL_GetWindowDisplayMode(screen, @Disp) = 0 then
+    begin
+      if (Disp.w < W) or (Disp.h < H) then
+      begin
+        Log.LogStatus(Format('Video resolution (%s) exceeded possible size (%s). Override stored config resolution!', [BuildResolutionString(W,H), BuildResolutionString(Disp.w, Disp.h)]), 'SDL_SetVideoMode');
+        Ini.SetResolution(Disp.w, Disp.h, true);
+      end
+      else if Fullscreen and ((Disp.w > W) or (Disp.h > H)) then
+      begin
+        Log.LogStatus(Format('Video resolution not used. Using native fullscreen resolution (%s)', [BuildResolutionString(Disp.w, Disp.h)]), 'SDL_SetVideoMode');
+        Ini.SetResolution(Disp.w, Disp.h, false, true);
+      end;
+
+      X := Disp.w - Screen.w;
+      Y := Disp.h - Screen.h;
+    end;
+
+    // if screen is out of the visisble desktop area, move it back
+    // this likely happens when creating a Window bigger than the possible desktop size
+    if (SDL_GetWindowFlags(screen) and SDL_WINDOW_FULLSCREEN = 0) and ((screen.x < 0) or (screen.Y < 0)) then
+    begin
+      // TODO: update SDL2
+      //SDL_GetWindowBordersSize(screen, w, h, nil, nil);
+      Log.LogStatus('Bad position for window. Re-position to (0,0)', 'SDL_SetVideoMode');
+      SDL_SetWindowPosition(screen, x, y+x);
+    end;
   end;
 
   //LoadOpenGL();
@@ -614,115 +615,239 @@ begin
   RenderH := 600;
   ScreenW := Screen.w;
   ScreenH := Screen.h;
-  // Ausganswerte für die State-Machine setzen
-  //SDL_GL_SetSwapInterval(1); // VSYNC (currently Windows only)
+  // Activate Vertical synchronization (Limits FPS to 60, saving power in GPU)
+  SDL_GL_SetSwapInterval(1); // VSYNC (currently Windows only)
 
   {// clear screen once window is being shown
   // Note: SwapBuffers uses RenderW/H, so they must be defined before
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT);
   SwapBuffers;}
+
+  SDL_SetWindowTitle(Screen, PChar(Title));
+  SDL_SetWindowIcon(Screen, UImage.LoadImage(UPathUtils.ResourcesPath.Append(WINDOW_ICON))); //load icon image (must be 32x32 for win32)
 end;
 
-procedure LoadLoadingScreen;
+function HasWindowState(Flag: integer): boolean;
 begin
-  ScreenLoading := TScreenLoading.Create;
-  ScreenLoading.OnShow;
-  Display.CurrentScreen := @ScreenLoading;
-  SwapBuffers;
-  ScreenLoading.Draw;
-  Display.Draw;
-  SwapBuffers;
+  Result := SDL_GetWindowFlags(screen) and Flag <> 0;
 end;
 
-procedure LoadScreens(Title: string);
+procedure UpdateResolution();
+  var
+    Disp: TSDL_DisplayMode;
+    Event: TSDL_event;
 begin
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenMain & ScreenName'));
-  ScreenMain :=             TScreenMain.Create;
-  ScreenName :=             TScreenName.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenLevel & ScreenSong'));
-  ScreenLevel :=            TScreenLevel.Create;
-  ScreenSong :=             TScreenSong.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenSongMenu & ScreenJukebox'));
-  ScreenSongMenu :=             TScreenSongMenu.Create;
-  ScreenJukebox :=             TScreenJukebox.Create;
-  Log.BenchmarkEnd(3); Log.LogBenchmark('====> Screen Jukebox', 3); Log.BenchmarkStart(3);
-  ScreenJukeboxOptions :=   TScreenJukeboxOptions.Create;
-  Log.BenchmarkEnd(3); Log.LogBenchmark('====> Screen Jukebox Options', 3); Log.BenchmarkStart(3);
-  ScreenJukeboxPlaylist :=   TScreenJukeboxPlaylist.Create;
-  Log.BenchmarkEnd(3); Log.LogBenchmark('====> Screen Jukebox Playlist', 3); Log.BenchmarkStart(3);
-  ScreenTop5 :=             TScreenTop5.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptions & ScreenOptionsGame'));
-  ScreenOptions :=          TScreenOptions.Create;
-  ScreenOptionsGame :=      TScreenOptionsGame.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptionsGraphics & ScreenOptionsSound'));
-  ScreenOptionsGraphics  :=  TScreenOptionsGraphics.Create;
-  ScreenOptionsSound    :=     TScreenOptionsSound.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptionsLyrics & ScreenOptionsThemes'));
-  ScreenOptionsLyrics   :=    TScreenOptionsLyrics.Create;
-  ScreenOptionsThemes   :=    TScreenOptionsThemes.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptionsRecord & ScreenOptionsAdvanced'));
-  ScreenOptionsRecord   :=    TScreenOptionsRecord.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptionsAdvanced'));
-  ScreenOptionsAdvanced :=    TScreenOptionsAdvanced.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptionsNetwork'));
-  ScreenOptionsNetwork :=    TScreenOptionsNetwork.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptionsWebCam'));
-  ScreenOptionsWebcam  :=    TScreenOptionsWebcam.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOptionsJukebox'));
-  ScreenOptionsJukebox :=    TScreenOptionsJukebox.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenEditSub & ScreenEdit'));
-  ScreenEditSub :=          TScreenEditSub.Create;
-  ScreenEdit :=             TScreenEdit.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenOpen'));
-  ScreenOpen :=             TScreenOpen.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenAbout'));
-  ScreenAbout :=             TScreenAbout.Create;
-  Log.BenchmarkEnd(3); Log.LogBenchmark('====> Screen About', 3); Log.BenchmarkStart(3);
-  //ScreenSingModi :=         TScreenSingModi.Create;
-  //Log.BenchmarkEnd(3); Log.LogBenchmark('====> Screen Sing with Modi support', 3); Log.BenchmarkStart(3);
-  ScreenSongJumpto :=         TScreenSongJumpto.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenPopupCheck & ScreenPopupError'));
+  if CurrentWindowMode = Mode_Borderless then Exit;
+  case CurrentWindowMode of
+    Mode_Fullscreen:
+    begin
+      SDL_GetWindowDisplayMode(screen, @Disp); // TODO: verify if not failed
+      Ini.GetResolutionFullscreen(Disp.W, Disp.H); // we use the fullscreen resolution without being doubled, true fullscreen uses non-multiplied one
+      SDL_SetWindowDisplayMode(screen, @Disp);
+      SDL_SetWindowSize(screen, Disp.W, Disp.H);
+    end;
+    Mode_Windowed:
+    begin
+      Ini.GetResolution(Disp.W, Disp.H);
+      SDL_SetWindowSize(screen, Disp.W, Disp.H);
+
+      // re-center window if it wasn't moved already, keeps it centered
+      if not HasValidPosition then
+      begin
+        SDL_SetWindowPosition(screen, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+      end;
+
+      // simulate window re-drawing, otherwise the context will be different sized
+      Event.user.type_ := SDL_WINDOWEVENT;
+      Event.window.event := SDL_WINDOWEVENT_RESIZED;
+      Event.window.data1 := Disp.W;
+      Event.window.data2 := Disp.H;
+      SDL_PushEvent(@Event);
+    end;
+  end;
+end;
+
+procedure UpdateVideoMode();
+  var
+    Mode: FullscreenModes;
+begin
+  if Ini.Fullscreen = 1 then Mode := Mode_Fullscreen
+  else if Ini.FullScreen = 2 then Mode := Mode_Borderless
+  else Mode := Mode_Windowed;
+
+  SetVideoMode(Mode);
+end;
+
+procedure SetVideoMode(Mode: FullscreenModes);
+  var
+    Disp: TSDL_DisplayMode;
+begin
+  if Mode = CurrentWindowMode then Exit;
+  if Mode >= Mode_Fullscreen then
+  begin
+    Mode := Mode and not Mode_Borderless;
+    SDL_GetWindowDisplayMode(screen, @Disp);
+    SDL_SetWindowFullscreen(screen, SDL_WINDOW_FULLSCREEN);
+
+    Ini.GetResolutionFullscreen(Disp.W, Disp.H);
+    SDL_SetWindowDisplayMode(screen, @Disp);
+    SDL_SetWindowSize(screen, Disp.W, Disp.H);
+  end
+  else if Mode = Mode_Borderless then
+  begin
+    // calls window-resize event which updates screen sizes
+    SDL_SetWindowFullscreen(screen, SDL_WINDOW_FULLSCREEN_DESKTOP);
+  end
+  else if Mode = Mode_Windowed then
+  begin
+    WindowModeDirty := true; // set window size dirty to restore old size after switching from fullscreen
+    SDL_SetWindowFullscreen(screen, SDL_WINDOW_RESIZABLE); // calls window-resize event which updates screen sizes
+
+    ScreenW := LastW; ScreenH := LastH;
+    if not HasValidSize then Ini.GetResolution(ScreenW, ScreenH);
+    SDL_SetWindowSize(screen, ScreenW, ScreenH);
+  end;
+
+  CurrentWindowMode := Mode;
+end;
+
+function SwitchVideoMode(Mode: FullscreenModes): FullscreenModes;
+begin
+  if Mode = Mode_Windowed then Mode := CurrentWindowMode;
+  SetVideoMode(CurrentWindowMode xor Mode);
+  Result := CurrentWindowMode;
+end;
+
+procedure OnWindowMoved(x,y: integer);
+begin
+  if CurrentWindowMode <> Mode_Windowed then Exit;
+  if (SDL_GetWindowFlags(screen) and (SDL_WINDOW_MINIMIZED or SDL_WINDOW_MAXIMIZED) <> 0) then Exit;
+
+  if not WindowModeDirty then
+  begin
+    HasValidPosition := true;
+    LastX := x;
+    LastY := y;
+  end;
+end;
+
+procedure OnWindowResized(w,h: integer);
+begin
+  if WindowModeDirty and not HasWindowState(SDL_WINDOW_FULLSCREEN) then
+  begin
+    if not HasValidSize then
+    begin
+      LastH := ScreenH;
+      LastW := ScreenW;
+    end;
+
+    // restoring from maximized state will additionally call a SDL_WINDOWEVENT_RESIZED event
+    // we keep the dirty flag to still revert to the last none-maximized stored position and size
+    if HasWindowState(SDL_WINDOW_MINIMIZED or SDL_WINDOW_MAXIMIZED) then
+    begin
+      SDL_RestoreWindow(screen);
+    end
+    else
+    begin
+      WindowModeDirty := false;
+    end;
+
+    // override render size
+    ScreenW := LastW;
+    ScreenH := LastH;
+    SDL_SetWindowPosition(screen, LastX, LastY);
+
+    // if there wasn't a windowed mode before, center window
+    if not HasValidPosition then
+    begin
+      SDL_SetWindowPosition(screen, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    end;
+  end
+  else
+  begin
+    // override render size
+    ScreenW := w; ScreenH := h;
+
+    if not HasWindowState(SDL_WINDOW_MAXIMIZED or SDL_WINDOW_FULLSCREEN) then
+    begin
+      HasValidSize := true;
+      LastW := w;
+      LastH := h;
+    end;
+  end;
+
+  if CurrentWindowMode = Mode_Fullscreen then
+  begin
+    Screen.W := ScreenW;
+    Screen.H := ScreenH;
+  end
+  else
+  begin
+    SDL_SetWindowSize(screen, ScreenW, ScreenH);
+  end;
+
+  if assigned(Display) then
+  begin
+    Display.OnWindowResized(); // notify display window has changed
+  end;
+end;
+
+procedure LoadScreens;
+begin
+  ScreenMain := TScreenMain.Create;
+  ScreenName := TScreenName.Create;
+  ScreenSong := TScreenSong.Create;
+  ScreenSongMenu := TScreenSongMenu.Create;
+  ScreenJukebox := TScreenJukebox.Create;
+  ScreenJukeboxOptions := TScreenJukeboxOptions.Create;
+  ScreenJukeboxPlaylist := TScreenJukeboxPlaylist.Create;
+  ScreenTop5 := TScreenTop5.Create;
+  ScreenOptions := TScreenOptions.Create;
+  ScreenOptionsGame := TScreenOptionsGame.Create;
+  ScreenOptionsGraphics := TScreenOptionsGraphics.Create;
+  ScreenOptionsSound := TScreenOptionsSound.Create;
+  ScreenOptionsLyrics := TScreenOptionsLyrics.Create;
+  ScreenOptionsThemes := TScreenOptionsThemes.Create;
+  ScreenOptionsRecord := TScreenOptionsRecord.Create;
+  ScreenOptionsAdvanced := TScreenOptionsAdvanced.Create;
+  ScreenOptionsNetwork := TScreenOptionsNetwork.Create;
+  ScreenOptionsWebcam := TScreenOptionsWebcam.Create;
+  ScreenOptionsJukebox := TScreenOptionsJukebox.Create;
+  ScreenOpen := TScreenOpen.Create;
+  ScreenAbout := TScreenAbout.Create;
+  ScreenDevelopers := TScreenDevelopers.Create;
+  ScreenSongJumpto := TScreenSongJumpto.Create;
   ScreenPopupCheck := TScreenPopupCheck.Create;
   ScreenPopupError := TScreenPopupError.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenPopupInfo & ScreenScoreX & ScreenPartyNewRound'));
   ScreenPopupInfo := TScreenPopupInfo.Create;
   ScreenPopupInsertUser := TScreenPopupInsertUser.Create;
   ScreenPopupSendScore := TScreenPopupSendScore.Create;
   ScreenPopupScoreDownload := TScreenPopupScoreDownload.Create;
-  ScreenPartyNewRound :=    TScreenPartyNewRound.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenPartyScore & ScreenPartyWin'));
-  ScreenPartyScore :=       TScreenPartyScore.Create;
-  ScreenPartyWin :=         TScreenPartyWin.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenPartyOptions & ScreenPartyPlayer'));
-  ScreenPartyOptions :=     TScreenPartyOptions.Create;
-  ScreenPartyPlayer :=      TScreenPartyPlayer.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenPartyRounds & ScreenTournamentX & ScreenStatMain'));
-  ScreenPartyRounds :=      TScreenPartyRounds.Create;
-  ScreenPartyTournamentRounds :=      TScreenPartyTournamentRounds.Create;
-  ScreenPartyTournamentPlayer :=      TScreenPartyTournamentPlayer.Create;
-  ScreenPartyTournamentOptions :=      TScreenPartyTournamentOptions.Create;
-  ScreenPartyTournamentWin :=      TScreenPartyTournamentWin.Create;
-  ScreenStatMain :=         TScreenStatMain.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title + ' - Loading ScreenStatDetail & ScreenCredits'));
-  ScreenStatDetail :=       TScreenStatDetail.Create;
-  ScreenCredits    :=       TScreenCredits.Create;
-  SDL_SetWindowTitle(Screen, PChar(Title));
+  ScreenPartyNewRound := TScreenPartyNewRound.Create;
+  ScreenPartyScore := TScreenPartyScore.Create;
+  ScreenPartyWin := TScreenPartyWin.Create;
+  ScreenPartyOptions := TScreenPartyOptions.Create;
+  ScreenPartyPlayer := TScreenPartyPlayer.Create;
+  ScreenPartyRounds := TScreenPartyRounds.Create;
+  ScreenPartyTournamentRounds := TScreenPartyTournamentRounds.Create;
+  ScreenPartyTournamentPlayer := TScreenPartyTournamentPlayer.Create;
+  ScreenPartyTournamentOptions := TScreenPartyTournamentOptions.Create;
+  ScreenPartyTournamentWin := TScreenPartyTournamentWin.Create;
+  ScreenStatMain := TScreenStatMain.Create;
+  ScreenStatDetail := TScreenStatDetail.Create;
 end;
 
-function LoadingThreadFunction: integer;
+procedure ShowStatus(Status: string);
 begin
-  LoadScreens(USDXVersionStr);
-  Result:= 1;
+  ScreenMain.Text[3].Text := Status;
 end;
 
 procedure UnloadScreens;
 begin
   ScreenMain.Free;
   ScreenName.Free;
-  ScreenLevel.Free;
   ScreenSong.Free;
-  //ScreenSing.Free;
   ScreenScore.Free;
   ScreenOptions.Free;
   ScreenOptionsGame.Free;
@@ -735,15 +860,13 @@ begin
   ScreenOptionsNetwork.Free;
   ScreenOptionsWebcam.Free;
   ScreenOptionsJukebox.Free;
-  ScreenEditSub.Free;
-  ScreenEdit.Free;
   ScreenJukebox.Free;
   ScreenJukeboxOptions.Free;
   ScreenJukeboxPlaylist.Free;
   ScreenTop5.Free;
   ScreenOpen.Free;
   ScreenAbout.Free;
-  //ScreenSingModi.Free;
+  ScreenDevelopers.Free;
   ScreenSongMenu.Free;
   ScreenSongJumpto.Free;
   ScreenPopupCheck.Free;

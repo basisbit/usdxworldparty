@@ -1,67 +1,112 @@
-; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
+ï»¿; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
 ; UltraStar Deluxe WorldParty Installer - Language file: Hungarian
-; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
+; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
 ; Translation by Gergely BOR <borg42+ultrastardx at gmail.com>.
 
-LangString abort_install ${LANG_HUNGARIAN} "Biztosan megszakítja a telepítést?"
-LangString abort_uninstall ${LANG_HUNGARIAN} "Biztosan megszakítja a program eltávolítását?"
-LangString oninit_running ${LANG_HUNGARIAN} "A telepítés már folyamatban van."
-LangString oninit_installagain ${LANG_HUNGARIAN} "Biztos abban, hogy még egyszer telepíteni szeretné?"
-LangString oninit_alreadyinstalled ${LANG_HUNGARIAN} "már telepítve van"
-LangString oninit_closeusdx ${LANG_HUNGARIAN} "nem eltávolítható, ha még fut! Kívánja a program bezárását?"
-LangString oninit_updateusdx ${LANG_HUNGARIAN} "Kívánja-e a programot frissíteni errõl a helyrõl:"
-LangString oninit_uninstall ${LANG_HUNGARIAN} "Do you want to uninstall the old version? (recommended)"
+!insertmacro LANGFILE_EXT Hungarian
 
-LangString update_connect ${LANG_HUNGARIAN} "Új verzió keresése az interneten"
-LangString button_next ${LANG_HUNGARIAN} "Tovább >"
-LangString button_close ${LANG_HUNGARIAN} "Bezárás"
-LangString update_information ${LANG_HUNGARIAN} "Ellenõrizheti, hogy van-e új 'UltraStar Deluxe WorldParty'-verzió. Ehhez internetkapcsolat szükséges. Ha van új verzió, az ezt követõen telepíthetõ."
+${LangFileString} abort_install "Biztosan megszakÃ­tja a telepÃ­tÃ©st?"
+${LangFileString} abort_uninstall "Biztosan megszakÃ­tja a program eltÃ¡volÃ­tÃ¡sÃ¡t?"
+;TODO ${LangFileString} abort_update "Are you sure to abort the update?"
+${LangFileString} oninit_running "A telepÃ­tÃ©s mÃ¡r folyamatban van."
+;TODO ${LangFileString} oninit_updating "An update is already running."
+${LangFileString} oninit_installagain "Biztos abban, hogy mÃ©g egyszer telepÃ­teni szeretnÃ©?"
+${LangFileString} oninit_alreadyinstalled "mÃ¡r telepÃ­tve van"
+${LangFileString} oninit_closeWorldParty "nem eltÃ¡volÃ­thatÃ³, ha mÃ©g fut! KÃ­vÃ¡nja a program bezÃ¡rÃ¡sÃ¡t?"
+${LangFileString} oninit_updateWorldParty "KÃ­vÃ¡nja-e a programot frissÃ­teni errÃµl a helyrÃµl:"
+${LangFileString} oninit_uninstall "Do you want to uninstall the old version? (recommended)"
 
-LangString delete_components ${LANG_HUNGARIAN} "Also delete the following components:"
-LangString delete_covers ${LANG_HUNGARIAN} "Töröljük a borítókat?"
-LangString delete_highscores ${LANG_HUNGARIAN} "Töröljük a pontszámokat?"
-LangString delete_config ${LANG_HUNGARIAN} "Config?"
-LangString delete_screenshots ${LANG_HUNGARIAN} "Screenshots?"
-LangString delete_playlists ${LANG_HUNGARIAN} "Playlists?"
-LangString delete_songs ${LANG_HUNGARIAN} "Töröljük a dalokat is? WARNING: ALL files within the InstallationDir\songs folder will be removed(!)"
+${LangFileString} update_connect "Ãšj verziÃ³ keresÃ©se az interneten"
+${LangFileString} button_next "TovÃ¡bb >"
+${LangFileString} button_close "BezÃ¡rÃ¡s"
+${LangFileString} update_information "EllenÃµrizheti, hogy van-e Ãºj '${name}'-verziÃ³. Ehhez internetkapcsolat szÃ¼ksÃ©ges. Ha van Ãºj verziÃ³, az ezt kÃ¶vetÃµen telepÃ­thetÃµ."
+;TODO ${LangFileString} button_check_update "Check"
 
-LangString update_check_older ${LANG_HUNGARIAN} "Az Ön gépén telepített verziónál ($R0) van már újabb ($1). Kívánja frissíteni?"
-LangString update_check_equal ${LANG_HUNGARIAN} "Az Ön gépén a legfrissebb verzió ($R0) van telepítve. Frissítés nem szükséges."
-LangString update_check_newer ${LANG_HUNGARIAN} "Az Ön gépén telepített verzió ($R0) frissebb, mint a jelenlegi kiadás ($1). Frissítés nem szükséges."
-LangString update_check_failed ${LANG_HUNGARIAN} "Az ellenõrzés sikertelen. Kívánja betölteni a program weboldalát, hogy ellenõrizhesse hogy van-e frissítés?"
+${LangFileString} delete_components "Also delete the following components:"
+${LangFileString} delete_covers "TÃ¶rÃ¶ljÃ¼k a borÃ­tÃ³kat?"
+${LangFileString} delete_highscores "TÃ¶rÃ¶ljÃ¼k a pontszÃ¡mokat?"
+${LangFileString} delete_config "Config?"
+${LangFileString} delete_screenshots "Screenshots?"
+${LangFileString} delete_playlists "Playlists?"
+${LangFileString} delete_songs "TÃ¶rÃ¶ljÃ¼k a dalokat is? WARNING: ALL files within the InstallationDir\songs folder will be removed(!)"
+
+;TODO ${LangFileString} update_noinstallation_online "You have no version installed. The current installer cannot update your version. Check our website ${homepage} for a new version."
+;TODO ${LangFileString} update_noinstallation_offline "You have no version installed. The current installer/updater cannot install a version. Check our website ${homepage} for a version."
+;TODO ${LangFileString} update_check_offline "Your version $installed_version is up-to-date. The current installer cannot update your version. Visit our project website to get latest news and updates."
+${LangFileString} update_check_older "Az Ã–n gÃ©pÃ©n telepÃ­tett verziÃ³nÃ¡l ($installed_version) van mÃ¡r Ãºjabb (online_version). KÃ­vÃ¡nja frissÃ­teni?"
+${LangFileString} update_check_equal "Az Ã–n gÃ©pÃ©n a legfrissebb verziÃ³ ($installed_version) van telepÃ­tve. FrissÃ­tÃ©s nem szÃ¼ksÃ©ges."
+${LangFileString} update_check_newer "Az Ã–n gÃ©pÃ©n telepÃ­tett verziÃ³ ($installed_version) frissebb, mint a jelenlegi kiadÃ¡s (online_version). FrissÃ­tÃ©s nem szÃ¼ksÃ©ges."
+;TODO ${LangFileString} update_check_no "The current updater/installer won't install a version. Check our website ${homepage} for a new version."
+${LangFileString} update_check_failed "Az ellenÃµrzÃ©s sikertelen. KÃ­vÃ¡nja betÃ¶lteni a program weboldalÃ¡t, hogy ellenÃµrizhesse hogy van-e frissÃ­tÃ©s?"
+;TODO ${LangFileString} update_download_success "The download of the new version $online_version succeeded.$\r$\n$\r$\nFinish the update by closing this updater. The new installation will be started right after."
+;TODO ${LangFileString} update_download_failed "The download of the new version $online_version failed. The installer could not be downloaded.$\r$\n$\r$\nPlease, visit our website ${homepage} for the new version."
+;TODO ${LangFileString} update_download_aborted "The download of the new version $online_version was aborted. Nothing will be updated. Remember, visit our website ${homepage} for latest news and updates."
+;TODO ${LangFileString} update_download_invalid_installer "The download of the new version $online_version failed. The downloaded installer was invalid. This can happen if the server/website has some issues, does not exist anymore or is in maintenance mode.$\r$\n$\r$\nPlease, visit our website ${homepage} and download the installer manually."
+;TODO ${LangFileString} update_download_none "No version to download selected. The current installer cannot update your version. Check our website ${homepage} for latest news and updates."
+;TODO ${LangFileString} update_versions_info "At least one new version of ${name} has been found. Please, select a specific version and choose to update. This version will be downloaded and the installation will be started afterwards."
+;TODO ${LangFileString} update_versions_none "None"
+
+;TODO ${LangFileString} update_download_downloading "Downloading %s "
+;TODO ${LangFileString} update_download_connecting "Connecting ... "
+;TODO ${LangFileString} update_download_sec "sec"
+;TODO ${LangFileString} update_download_min "min"
+;TODO ${LangFileString} update_download_hour "hour"
+;TODO ${LangFileString} update_download_multi "s"
+;TODO ${LangFileString} update_download_progress "%dkiB (%d%%) of %dkiB @ %d.%02dkiB/s"
+;TODO ${LangFileString} update_download_remaining " (%d %s%s remaining)"
+;TODO ${LangFileString} update_download_remain_sec " (1 second remaining)"
+;TODO ${LangFileString} update_download_remain_min " (1 minute remaining)"
+;TODO ${LangFileString} update_download_remain_hour " (1 hour remaining)"
+;TODO ${LangFileString} update_download_remain_secs " (%u seconds remaining)"
+;TODO ${LangFileString} update_download_remain_mins " (%u minutes remaining)"
+;TODO ${LangFileString} update_download_remain_hours " (%u hours remaining)"
 
 ; Welcome Page:
 
-LangString page_welcome_title_update ${LANG_HUNGARIAN} "Üdvözli Önt az UltraStar Deluxe WorldParty frissítési varázslója!"
-LangString page_welcome_txt_update ${LANG_HUNGARIAN} "Ez a varázsló végigvezeti Önt az UltraStar Deluxe WorldParty frissítési folyamatán. Az UltraStar Deluxe egy ingyenes és szabad karaokeprogram, olyan mint a Singstar.$\n$\r$\n$\rAz UltraStar Deluxe csapata és zup3r_vock (WorldParty Mod) jó szórakozást kíván!$\n$\rA projekt weboldala: http://www.ultrastardeluxe.org/  http://www.ultrastar-es.org/$\n$\rTámogatás a fórumunkon: http://forum.ultrastardeluxe.org/"
-LangString page_welcome_title ${LANG_HUNGARIAN} "Üdvözli Önt az UltraStar Deluxe WorldParty telepítési varázslója!"
-LangString page_welcome_txt ${LANG_HUNGARIAN} "Ez a varázsló végigvezeti Önt az UltraStar Deluxe WorldParty telepítési folyamatán. Az UltraStar Deluxe egy ingyenes és szabad karaokeprogram, olyan mint a Singstar.$\n$\r$\n$\rAz UltraStar Deluxe csapata és zup3r_vock (WorldParty Mod) jó szórakozást kíván!$\n$\rA projekt weboldala: http://www.ultrastardeluxe.org/  http://www.ultrastar-es.org/$\n$\rTámogatás a fórumunkon: http://forum.ultrastardeluxe.org/"
-LangString page_un_welcome_title ${LANG_HUNGARIAN} "Üdvözli Önt az UltraStar Deluxe WorldParty eltávolítási varázslója!"
-
-; Components Page:
-
-LangString page_components_info ${LANG_HUNGARIAN} "Részletes információért vigye az egeret a komponens fölé"
+${LangFileString} page_welcome_title_update "ÃœdvÃ¶zli Ã–nt az ${name} frissÃ­tÃ©si varÃ¡zslÃ³ja!"
+${LangFileString} page_welcome_txt_update "Ez a varÃ¡zslÃ³ vÃ©gigvezeti Ã–nt az ${name} frissÃ­tÃ©si folyamatÃ¡n. Az ${name} egy ingyenes Ã©s szabad karaokeprogram, olyan mint a Singstar.$\r$\n$\r$\n${publisher} csapata jÃ³ szÃ³rakozÃ¡st kÃ­vÃ¡n!$\r$\n$\r$\nA projekt weboldala:$\n$\r${homepage}$\r$\n$\r$\nTÃ¡mogatÃ¡s a fÃ³rumunkon:$\n$\r${forum}"
+${LangFileString} page_welcome_title "ÃœdvÃ¶zli Ã–nt az ${name} telepÃ­tÃ©si varÃ¡zslÃ³ja!"
+${LangFileString} page_welcome_txt "Ez a varÃ¡zslÃ³ vÃ©gigvezeti Ã–nt az ${name} telepÃ­tÃ©si folyamatÃ¡n. Az ${name} egy ingyenes Ã©s szabad karaokeprogram, olyan mint a Singstar.$\r$\n$\r$\n${publisher} csapata jÃ³ szÃ³rakozÃ¡st kÃ­vÃ¡n!$\r$\n$\r$\nA projekt weboldala:$\n$\r${homepage}$\r$\n$\r$\nTÃ¡mogatÃ¡s a fÃ³rumunkon:$\n$\r${forum}"
+${LangFileString} page_un_welcome_title "ÃœdvÃ¶zli Ã–nt az ${name} eltÃ¡volÃ­tÃ¡si varÃ¡zslÃ³ja!"
 
 ; Custom Page
 
-LangString page_settings_fullscreen ${LANG_HUNGARIAN} "Teljes képernyõs üzemmód"
-LangString page_settings_subtitle ${LANG_HUNGARIAN} "Adja meg a kedvenc UltraStar Deluxe WorldParty-beállítását."
+${LangFileString} page_settings_subtitle "Adja meg a kedvenc ${name}-beÃ¡llÃ­tÃ¡sÃ¡t."
+;TODO ${LangFileString} page_settings_config_title "${name} Configuration (optional)"
+;TODO ${LangFileString} page_settings_config_info "All settings can also be changed in the GUI later."
+${LangFileString} page_settings_fullscreen_label "Teljes kÃ©pernyÃµs Ã¼zemmÃ³d:"
+;TODO ${LangFileString} page_settings_fullscreen_info "Start game in window or fullscreen?"
+${LangFileString} page_settings_language_label "Nyelv:"
+;TODO ${LangFileString} page_settings_language_info "Adjust the GUI language."
+${LangFileString} page_settings_resolution_label "FelbontÃ¡s:"
+;TODO ${LangFileString} page_settings_resolution_info "Choose screen resolution/window size."
+;TODO ${LangFileString} page_settings_tabs_label "Tabs:"
+;TODO ${LangFileString} page_settings_tabs_info "Employ a virtual folder structure to show songs?"
+;TODO ${LangFileString} page_settings_sorting_label "Sorting:"
+;TODO ${LangFileString} page_settings_sorting_info "Select criterion to sort songs."
+;TODO ${LangFileString} page_settings_songdir_label "SongDir"
+;TODO ${LangFileString} page_settings_songdir_info "Choose additional song directory for ${name}."
 
 ; Finish Page:
 
-LangString page_finish_txt ${LANG_HUNGARIAN} "Az UltraStar Deluxe WorldParty telepítése sikeresen befejezõdött.$\n$\r$\n$\rHa kíváncsi a legfrissebb hírekre és frissítésekre, kérjük látogassa meg projektünk weboldalát."
-LangString page_finish_linktxt ${LANG_HUNGARIAN} "A projekt weboldala"
-LangString page_finish_desktop ${LANG_HUNGARIAN} "Tegyünk egy parancsikont az asztalra?"
+${LangFileString} page_finish_txt "Az ${name} telepÃ­tÃ©se sikeresen befejezÃµdÃ¶tt.$\r$\n$\r$\nHa kÃ­vÃ¡ncsi a legfrissebb hÃ­rekre Ã©s frissÃ­tÃ©sekre, kÃ©rjÃ¼k lÃ¡togassa meg projektÃ¼nk weboldalÃ¡t."
+${LangFileString} page_finish_linktxt ">>> ${homepage} <<<"
+${LangFileString} page_finish_desktop "TegyÃ¼nk egy parancsikont az asztalra?"
+
+;unused
+;TODO ${LangFileString} page_finish_txt_update "${name} Update has checked for a new version."
 
 ; Start Menu and Shortcuts
 
-LangString sm_shortcut ${LANG_HUNGARIAN} "UltraStar Deluxe WorldParty karaoke"
-LangString sm_uninstall ${LANG_HUNGARIAN} "Eltávolítás"
-LangString sm_website ${LANG_HUNGARIAN} "Weboldal"
-LangString sm_license ${LANG_HUNGARIAN} "Licensz"
-LangString sm_readme ${LANG_HUNGARIAN} "OlvassEl"
-LangString sm_songs ${LANG_HUNGARIAN} "Dalok"
-LangString sm_documentation ${LANG_HUNGARIAN} "Dokumentáció"
+${LangFileString} sm_shortcut "${name} karaoke"
+${LangFileString} sm_uninstall "EltÃ¡volÃ­tÃ¡s"
+${LangFileString} sm_website "Weboldal"
+${LangFileString} sm_license "Licensz"
+${LangFileString} sm_readme "OlvassEl"
+${LangFileString} sm_songs "Dalok"
+;TODO ${LangFileString} sm_update "Update"
+${LangFileString} sm_documentation "DokumentÃ¡ciÃ³"
 
-LangString sc_play ${LANG_HUNGARIAN} "Játék"
-LangString sc_desktop ${LANG_HUNGARIAN} "Tegyünk egy parancsikont az asztalra?"
+${LangFileString} sc_play "JÃ¡tÃ©k"
+${LangFileString} sc_desktop "TegyÃ¼nk egy parancsikont az asztalra?"
+

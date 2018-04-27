@@ -1,27 +1,25 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/screens/UScreenPopup.pas $
- * $Id: UScreenPopup.pas 1939 2009-11-09 00:27:55Z s_alexander $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
+
 
 unit UScreenPopup;
 
@@ -147,12 +145,12 @@ type
 
   TScreenPopupError = class(TScreenPopup)
     public
-      constructor Create;
+      constructor Create; override;
   end;
 
   TScreenPopupInfo = class(TScreenPopup)
     public
-      constructor Create;
+      constructor Create; override;
   end;
 
 type
@@ -222,6 +220,7 @@ var
   Value: boolean;
 begin
   Result := true;
+  Value := false;
   if (PressedDown) then
   begin // Key Down
     // check special keys
@@ -264,7 +263,7 @@ begin
   fHandlerData := nil;
 
   AddText(Theme.CheckPopup.TextCheck);
-  
+
   LoadFromTheme(Theme.CheckPopup);
 
   AddButton(Theme.CheckPopup.Button1);
@@ -319,6 +318,7 @@ var
   Password_TMP: UTF8String;
 begin
   Result := true;
+  Value := false;
   if (PressedDown) then
   begin // Key Down
     // check normal keys
@@ -478,6 +478,7 @@ var
   Password_TMP: UTF8String;
 begin
   Result := true;
+  Value := 0;
   if (PressedDown) then
   begin // Key Down
     // check normal keys
@@ -819,8 +820,6 @@ end;
 { TScreenPopupScoreDownload }
 
 function TScreenPopupScoreDownload.ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean;
-var
-  Value: boolean;
 begin
   Result := true;
   if (PressedDown) then
@@ -830,7 +829,6 @@ begin
       SDLK_ESCAPE,
       SDLK_BACKSPACE :
         begin
-          Value := false;
           Visible := false;
           Result := false;
           Text[0].Text := Language.Translate('SCORE_DOWNLOAD_RECEIVE_LIST');
@@ -839,7 +837,6 @@ begin
 
       SDLK_RETURN:
         begin
-          Value := (Interaction = 0);
           if (Interaction = 0) then
           begin
             Visible := false;
@@ -900,7 +897,7 @@ end;
 procedure TScreenPopupScoreDownload.SaveScoreSong();
 var
   String_Text, User_Score, Max_Score, Media_Score: string;
-  I, J, Update: integer;
+  J, Update: integer;
   DeleteSongLevel: array [0..2] of boolean;
 begin
 
@@ -910,7 +907,7 @@ begin
     Text_SongSituation := Language.Translate('SCORE_DOWNLOAD_SONG') + ' ' + IntToStr(Actual_Song) + '/' + IntToStr(Num_Songs);
     Text_WebSituation := IntToStr(Actual_Web) + '/' + IntToStr(Num_Webs);
 
-    for J := 0 to 2 do
+    for J := 0 to 2 do //for each difficulty level
     begin
 
       if (Position_Receive_List[J] <= Length(Receive_List[J])) then
@@ -921,7 +918,14 @@ begin
         while (Receive_List[J][Position_Receive_List[J]] <> #10) and (Position_Receive_List[J] <= Length(Receive_List[J])) do
         begin
           String_Text := String_Text + Receive_List[J][Position_Receive_List[J]];
-          Position_Receive_List[J] := Position_Receive_List[J] + 1;
+          if((Position_Receive_List[J] < Length(Receive_List[J]))) then
+          begin
+            Position_Receive_List[J] := Position_Receive_List[J] + 1;
+          end
+          else
+          begin
+            Break;
+          end;
         end;
 
         // E -> Error song no exist in web

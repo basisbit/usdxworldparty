@@ -1,68 +1,113 @@
-; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
+ï»¿; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
 ; UltraStar Deluxe WorldParty Installer - Language file: German
-; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
+; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
 
-LangString abort_install ${LANG_GERMAN} "Willst du die Installation wirklich abbrechen?"
-LangString abort_uninstall ${LANG_GERMAN} "Willst du die Deinstallation wirklich abbrechen?"
-LangString oninit_running ${LANG_GERMAN} "Die Installation wird bereits ausgeführt."
-LangString oninit_installagain ${LANG_GERMAN} "Bist du sicher, dass du es erneut installieren möchtest?"
-LangString oninit_alreadyinstalled ${LANG_GERMAN} "ist bereits installiert"
-LangString oninit_closeusdx ${LANG_GERMAN} "kann nicht während der Laufzeit deinstalliert werden. Soll es geschlossen werden?"
-LangString oninit_updateusdx ${LANG_GERMAN} "Möchtest du das Programm aktualisieren von"
-LangString oninit_uninstall ${LANG_GERMAN} "Möchtest du die alte Version entfernen? (empfohlen)"
+!insertmacro LANGFILE_EXT German
 
-LangString update_connect ${LANG_GERMAN} "Mit dem Internet verbinden und nach aktueller Version suchen"
-LangString button_next ${LANG_GERMAN} "Weiter >"
-LangString button_close ${LANG_GERMAN} "Beenden"
-LangString update_information ${LANG_GERMAN} "Du kannst nach einer aktuelleren Version von 'UltraStar Deluxe WorldParty' suchen. Dazu wird eine Verbindung mit dem Internet hergestellt. Wurde eine aktuellere Version gefunden, kann diese anschließend installiert werden."
+${LangFileString} abort_install "Willst du die Installation wirklich abbrechen?"
+${LangFileString} abort_uninstall "Willst du die Deinstallation wirklich abbrechen?"
+${LangFileString} abort_update "Willst du das Updaten wirklich abbrechen?"
+${LangFileString} oninit_running "Die Installation wird bereits ausgefÃ¼hrt."
+${LangFileString} oninit_updating "Eine Aktualisierung wird bereits ausgefÃ¼hrt."
+${LangFileString} oninit_installagain "Bist du sicher, dass du es erneut installieren mÃ¶chtest?"
+${LangFileString} oninit_alreadyinstalled "ist bereits installiert"
+${LangFileString} oninit_closeWorldParty "kann nicht wÃ¤hrend der Laufzeit deinstalliert werden. Soll es geschlossen werden?"
+${LangFileString} oninit_updateWorldParty "MÃ¶chtest du das Programm aktualisieren von"
+${LangFileString} oninit_uninstall "MÃ¶chtest du die alte Version entfernen? (empfohlen)"
 
-LangString delete_components ${LANG_GERMAN} "Folgende Komponenten ebenfalls entfernen:"
-LangString delete_covers ${LANG_GERMAN} "Cover?"
-LangString delete_highscores ${LANG_GERMAN} "Statistiken?"
-LangString delete_config ${LANG_GERMAN} "Konfiguration?"
-LangString delete_screenshots ${LANG_GERMAN} "Screenshots?"
-LangString delete_playlists ${LANG_GERMAN} "Playlisten?"
-LangString delete_songs ${LANG_GERMAN} "Lieder löschen? WARNUNG: ALLE Dateien im Unterordner 'songs' des Installationsverzeichnisses werden gelöscht(!)"
+${LangFileString} update_connect "Mit dem Internet verbinden und nach aktueller Version suchen"
+${LangFileString} button_next "Weiter >"
+${LangFileString} button_close "Beenden"
 
-LangString update_check_older ${LANG_GERMAN} "Deine aktuelle Version $R0 ist veraltet. Die neue Version $1 von UltraStar Deluxe WorldParty ist verfügbar. Möchtest du sie runterladen?"
-LangString update_check_equal ${LANG_GERMAN} "Deine aktuelle Version $R0 ist auf dem neusten Stand.$\n$\rKein Update benötigt."
-LangString update_check_newer ${LANG_GERMAN} "Deine aktuelle Version $R0 ist neuer als die zurzeit veröffentlichte$\n$\rVersion $1 von UltraStar Deluxe WorldParty. Kein Update benötigt."
-LangString update_check_failed ${LANG_GERMAN} "Die Aktualisierungsprüfung ist fehlgeschlagen. Willst du manuell nach Updates suchen?"
+${LangFileString} delete_components "Folgende Komponenten ebenfalls entfernen:"
+${LangFileString} delete_covers "Cover"
+${LangFileString} delete_highscores "Statistiken"
+${LangFileString} delete_config "Konfiguration"
+${LangFileString} delete_screenshots "Screenshots"
+${LangFileString} delete_playlists "Playlisten"
+${LangFileString} delete_songs "Lieder lÃ¶schen? WARNUNG: ALLE Dateien im Unterordner 'songs' des Installationsverzeichnisses werden gelÃ¶scht(!)"
+
+${LangFileString} update_information "Du kannst nach einer aktuelleren Version von '${name}' suchen. Dazu wird eine Verbindung mit dem Internet hergestellt. Wurde eine aktuellere Version gefunden, kann diese anschlieÃŸend installiert werden."
+${LangFileString} button_check_update "ÃœberprÃ¼fen"
+
+${LangFileString} update_noinstallation_online "Du hast keine Version installiert. Diese Installationsroutine kann die aktuelle Version nicht aktualisieren. Besuche unsere Projektwebseite ${homepage} um nach einer aktuellen Version zu suchen."
+${LangFileString} update_noinstallation_offline "Du hast keine Version installiert. Diese Installationsroutine kann eine Aktualisierung nicht installieren. Besuche unsere Projektwebseite ${homepage} um nach einer aktuellen Version zu suchen."
+${LangFileString} update_check_offline "Deine aktuelle Version $installed_version ist auf dem neusten Stand. se Installationsroutine kann die aktuelle Version nicht aktualisieren. Besuche unsere Projektwebseite ${homepage} um nach einer aktuellen Version zu suchen."
+${LangFileString} update_check_older "Deine aktuelle Version $installed_version ist veraltet. Die neueste Version $online_version von ${name} ist verfÃ¼gbar. WÃ¤hle eine Option aus:"
+${LangFileString} update_check_equal "Deine aktuelle Version $installed_version ist auf dem neusten Stand.$\n$\rKein Update benÃ¶tigt."
+${LangFileString} update_check_newer "Deine aktuelle Version $installed_version ist neuer als die zurzeit verÃ¶ffentlichte$\n$\rVersion $online_version von ${name}. Kein Update benÃ¶tigt."
+${LangFileString} update_check_no "Diese Installationsroutine wird keine Version installieren. Besuche unsere Projektwebseite ${homepage} um nach einer aktuellen Version zu suchen."
+${LangFileString} update_check_failed "Die AktualisierungsprÃ¼fung ist fehlgeschlagen. Besuche unsere Projektwebseite ${homepage} um nach einer aktuellen Version zu suchen und manuell diese herunterzuladen."
+;${LangFileString} update_download_success "Das Herunterladen der neuen Version $online_version war erfolgreich.$\n$\r$\n$\rBeende die Aktualisierung indem du diese Installationsroutine schlieÃŸt. Die Installation der neuen Version wird am Anschluss gestartet."
+;${LangFileString} update_download_failed "Das Herunterladen der neuen Version $online_version ist fehlgeschlagen. Bitte, besuche unsere Projektwebseite ${homepage} um nach einer aktuellen Version zu suchen."
+;${LangFileString} update_download_aborted "Das Herunterladen der neuen Version $online_version wurde abgebrochen. Eine Aktualisierung bleibt aus. Denk daran, besuche unsere Projektwebseite ${homepage} um die neusten Updates und News zu erhalten."
+;${LangFileString} update_download_invalid_installer "Das Herunterladen der neuen Version $online_version ist fehlgeschlagen. Die heruntergeladene Installationsdatei war fehlerhaft. Dies kann verschiedene GrÃ¼nde haben wie ein Probleme mit dem Server oder der Webseite, die Datei nicht mehr verfÃ¼gbar ist oder der Server sich in Wartung befindet.$\n$\r$\n$\rBitte, besuche unsere Projektwebseite ${homepage} um die aktuelle Version manuell herunterzuladen."
+;${LangFileString} update_download_none "Keine Version zum Herunterladen ausgewÃ¤hlt. Diese Installationsroutine kann keine Aktualisierung durchfÃ¼hren. Besuche unsere Projektwebseite ${homepage} um die neusten Updates und News zu erhalten."
+;${LangFileString} update_versions_info "Es wurde mindestens eine neue Version von ${name} gefunden. WÃ¤hle eine aus um diese zu installieren. Diese wird heruntergeladen und anschlieÃŸend die Installationsroutine der neuen Version gestartet."
+${LangFileString} update_versions_none "Keine"
+
+${LangFileString} update_download_downloading "Herunterladen: %s "
+${LangFileString} update_download_connecting "Verbinden ... "
+${LangFileString} update_download_sec "Sekunde"
+${LangFileString} update_download_min "Minute"
+${LangFileString} update_download_hour "Stunde"
+${LangFileString} update_download_multi "n"
+${LangFileString} update_download_progress "%dkB (%d%%) von %dkB @ %d.%01dkB/s"
+${LangFileString} update_download_remaining " (%d %s%s verbleibend)"
+${LangFileString} update_download_remain_sec " (1 Sekunde verbleibend)"
+${LangFileString} update_download_remain_min " (1 Minute verbleibend)"
+${LangFileString} update_download_remain_hour " (1 hour verbleibend)"
+${LangFileString} update_download_remain_secs " (%u Sekunden verbleibend)"
+${LangFileString} update_download_remain_mins " (%u Minuten verbleibend)"
+${LangFileString} update_download_remain_hours " (%u Stunden verbleibend)"
 
 ; Welcome Page:
 
-LangString page_welcome_title_update ${LANG_GERMAN} "Willkommen beim Aktualisierungsassistenten von UltraStar Deluxe WorldParty" 
-LangString page_welcome_txt_update ${LANG_GERMAN} "Dieser Assistent wird dich durch die Aktualisierung von UltraStar Deluxe WorldParty begleiten. UltraStar Deluxe ist ein kostenloses quelloffenes Karaokespiel, welches Singstar ähnelt. $\n$\r$\n$\rDas UltraStar Deluxe Team und zup3r_vock (WorldParty Mod) wünscht viel Spaß.$\n$\rProjekthomepage: http://www.ultrastardeluxe.org  http://www.ultrastar-es.org$\n$\rSupport Forum: http://forum.ultrastardeluxe.org"
-
-LangString page_welcome_title ${LANG_GERMAN} "Willkommen zur Installationsroutine von UltraStar Deluxe WorldParty"
-LangString page_welcome_txt ${LANG_GERMAN} "Dieser Assistent wird dich durch die Installation von UltraStar Deluxe WorldParty begleiten. UltraStar Deluxe ist ein kostenloses quelloffenes Karaokespiel, welches Singstar ähnelt. $\n$\r$\n$\rDas UltraStar Deluxe Team und zup3r_vock (WorldParty Mod) wünscht viel Spaß.$\n$\rProjekthomepage: http://www.ultrastardeluxe.org  http://www.ultrastar-es.org$\n$\rSupport Forum: http://forum.ultrastardeluxe.org"
-
-LangString page_un_welcome_title ${LANG_GERMAN} "Willkommen zur Deinstallation von UltraStar Deluxe WorldParty"
-
-; Components Page:
-
-LangString page_components_info ${LANG_GERMAN} "Schiebe den Mauszeiger über die Komponente um Details einzusehen"
+${LangFileString} page_welcome_title_update "Willkommen beim Aktualisierungsassistenten von ${name}"
+${LangFileString} page_welcome_txt_update "Dieser Assistent wird dich durch die Aktualisierung von ${name} begleiten. ${name} ist ein kostenloses quelloffenes Karaokespiel, welches Singstar Ã¤hnelt. $\n$\r$\n$\rDas ${publisher} wÃ¼nscht viel SpaÃŸ.$\n$\r$\n$\rProjektseite:$\n$\r${homepage}$\n$\r$\n$\rSupport Forum:$\n$\r${forum}"
+${LangFileString} page_welcome_title "Willkommen zur Installationsroutine von ${name}"
+${LangFileString} page_welcome_txt "Dieser Assistent wird dich durch die Installation von ${name} begleiten. ${name} ist ein kostenloses quelloffenes Karaokespiel, welches Singstar Ã¤hnelt. $\n$\r$\n$\rDas ${publisher} wÃ¼nscht viel SpaÃŸ.$\n$\r$\n$\rProjektseite:$\n$\r${homepage}$\n$\r$\n$\rSupport Forum:$\n$\r${forum}"
+${LangFileString} page_un_welcome_title "Willkommen zur Deinstallation von ${name}"
 
 ; Custom Page
 
-LangString page_settings_fullscreen ${LANG_GERMAN} "Vollbild Modus:"
-LangString page_settings_subtitle ${LANG_GERMAN} "Lege deine favorisierten Einstellungen für UltraStar Deluxe WorldParty fest."
+${LangFileString} page_settings_subtitle "Lege deine favorisierten Einstellungen fÃ¼r ${name} fest."
+${LangFileString} page_settings_config_title "${name} Konfiguration (Optional)"
+${LangFileString} page_settings_config_info "Alle Einstellungen kÃ¶nnen nachtrÃ¤glich im SpielmenÃ¼ geÃ¤ndert werden."
+${LangFileString} page_settings_fullscreen_label "Vollbild Modus:"
+${LangFileString} page_settings_fullscreen_info "Spiel im Fenster oder Vollbild starten?"
+${LangFileString} page_settings_language_label "Sprache:"
+${LangFileString} page_settings_language_info "Passe die Sprache des MenÃ¼s an."
+${LangFileString} page_settings_resolution_label "AuflÃ¶sung:"
+${LangFileString} page_settings_resolution_info "WÃ¤hle die AuflÃ¶sung/FenstergrÃ¶ÃŸe aus."
+${LangFileString} page_settings_tabs_label "Ordnerstruktur:"
+${LangFileString} page_settings_tabs_info "Eine virtuelle Ordnerstruktur zum Anzeigen der Lieder verwenden?"
+${LangFileString} page_settings_sorting_label "Sortierung:"
+${LangFileString} page_settings_sorting_info "Kriterium zum Sortieren der Lieder wÃ¤hlen."
+${LangFileString} page_settings_songdir_label "SongDir"
+${LangFileString} page_settings_songdir_info "Hier kann ein weiterer Ordner mit Songs fÃ¼r ${name} angegeben werden."
 
 ; Finish Page:
 
-LangString page_finish_txt ${LANG_GERMAN} "UltraStar Deluxe WorldParty wurde erfolgreich auf Ihrem System installiert.$\n$\r$\n$\rBesuche unsere Projektwebseite um die neusten Updates und News zu erhalten."
-LangString page_finish_linktxt ${LANG_GERMAN} "Projektwebseite"
-LangString page_finish_desktop ${LANG_GERMAN} "Verknüpfung auf dem Desktop erstellen?"
+${LangFileString} page_finish_txt "${name} wurde erfolgreich auf Ihrem System installiert.$\n$\r$\n$\rBesuche unsere Projektwebseite um die neusten Updates und News zu erhalten."
+${LangFileString} page_finish_linktxt ">>> ${homepage} <<<"
+${LangFileString} page_finish_desktop "VerknÃ¼pfung auf dem Desktop erstellen?"
+
+;unused
+${LangFileString} page_finish_txt_update "${name} Update hat nach einer neuen Version gesucht."
+
 
 ; Start Menu and Shortcuts
 
-LangString sm_website ${LANG_GERMAN} "Webseite"
-LangString sm_uninstall ${LANG_GERMAN} "Deinstallieren"		  
-LangString sm_shortcut ${LANG_GERMAN} "UltraStar Deluxe WorldParty spielen"  
-LangString sm_license ${LANG_GERMAN} "Lizenz"
-LangString sm_readme ${LANG_GERMAN} "Lies mich"
-LangString sm_songs ${LANG_GERMAN} "Songs"
-LangString sm_documentation ${LANG_GERMAN} "Dokumentation"
+${LangFileString} sm_shortcut "${name} spielen"
+${LangFileString} sm_uninstall "Deinstallieren"
+${LangFileString} sm_website "Webseite"
+${LangFileString} sm_license "Lizenz"
+${LangFileString} sm_readme "Lies mich"
+${LangFileString} sm_songs "Songs"
+${LangFileString} sm_update "Updaten"
+${LangFileString} sm_documentation "Dokumentation"
 
-LangString sc_play ${LANG_GERMAN} "Spielen" 
-LangString sc_desktop ${LANG_GERMAN} "Verknüpfung auf dem Desktop erstellen?" 
+${LangFileString} sc_play "Spielen"
+${LangFileString} sc_desktop "VerknÃ¼pfung auf dem Desktop erstellen"
+

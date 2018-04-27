@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/base/UThemes.pas $
- * $Id: UThemes.pas 3131 2015-09-07 00:11:32Z basisbit $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UThemes;
@@ -39,6 +36,7 @@ uses
   Classes,
   UCommon,
   ULog,
+  UIni,
   UTexture,
   UPath;
 type
@@ -58,13 +56,25 @@ type
   end;
 
 const
-  //Defaul Background for Screens w/o Theme e.g. editor
+  //Defaul Background for Screens w/o Theme
   DEFAULT_BACKGROUND: TThemeBackground = (
     BGType: bgtColor;
     Color:  (R:1; G:1; B:1);
     Tex:    '';
     Alpha:  1.0
   );
+
+  OPTIONS_DESC_INDEX_BACK      = 0;
+  OPTIONS_DESC_INDEX_GAME      = 1;
+  OPTIONS_DESC_INDEX_GRAPHICS  = 2;
+  OPTIONS_DESC_INDEX_SOUND     = 3;
+  OPTIONS_DESC_INDEX_LYRICS    = 4;
+  OPTIONS_DESC_INDEX_THEMES    = 5;
+  OPTIONS_DESC_INDEX_RECORD    = 6;
+  OPTIONS_DESC_INDEX_ADVANCED  = 7;
+  OPTIONS_DESC_INDEX_NETWORK   = 8;
+  OPTIONS_DESC_INDEX_WEBCAM    = 9;
+  OPTIONS_DESC_INDEX_JUKEBOX   = 10;
 
 
 type
@@ -243,15 +253,17 @@ type
     ButtonMulti:      TThemeButton;
     ButtonJukebox:    TThemeButton;
     ButtonStat:       TThemeButton;
-    ButtonEditor:     TThemeButton;
     ButtonOptions:    TThemeButton;
-    ButtonAbout:      TThemeButton;
     ButtonExit:       TThemeButton;
+    ButtonAbout:      TThemeButton;
+    ProgressSong: TThemeStatic;
+    ProgressSongsText: TThemeText;
 
     TextDescription:      TThemeText;
     TextDescriptionLong:  TThemeText;
     Description:          array[0..7] of UTF8String;
     DescriptionLong:      array[0..7] of UTF8String;
+
   end;
 
   TThemeName = class(TThemeBasic)
@@ -265,20 +277,14 @@ type
 
     PlayerAvatar:        TThemeButton;
 
-    PlayerSelect:        array [0..5] of TThemeStatic;
-    PlayerSelectText:    array [0..5] of TThemeText;
-    PlayerSelectAvatar:  array [0..5] of TThemeStatic;
+    PlayerSelect:        array [0..UIni.IMaxPlayerCount-1] of TThemeStatic;
+    PlayerSelectText:    array [0..UIni.IMaxPlayerCount-1] of TThemeText;
+    PlayerSelectAvatar:  array [0..UIni.IMaxPlayerCount-1] of TThemeStatic;
     PlayerSelectCurrent: TThemeButton;
-    
+
     SelectPlayersCount:  TThemeSelectSlide;
     SelectPlayerColor:   TThemeSelectSlide;
     SelectPlayerLevel:   TThemeSelectSlide;
-  end;
-
-  TThemeLevel = class(TThemeBasic)
-    ButtonEasy:       TThemeButton;
-    ButtonMedium:     TThemeButton;
-    ButtonHard:       TThemeButton;
   end;
 
   TThemeSong = class(TThemeBasic)
@@ -303,6 +309,9 @@ type
 
     //Duet Icon
     DuetIcon:         TThemeStatic;
+
+    //Rap Icon
+    RapIcon:          TThemeStatic;
 
     //Show Cat in TopLeft Mod
     TextCat:          TThemeText;
@@ -764,40 +773,38 @@ type
 
     TextArtistTitle:  TThemeText;
 
-    PlayerStatic:     array[1..6] of AThemeStatic;
-    PlayerTexts:      array[1..6] of AThemeText;
+    PlayerStatic:     array[1..UIni.IMaxPlayerCount] of AThemeStatic;
+    PlayerTexts:      array[1..UIni.IMaxPlayerCount] of AThemeText;
 
-    TextName:         array[1..6] of TThemeText;
-    TextScore:        array[1..6] of TThemeText;
+    TextName:         array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextScore:        array[1..UIni.IMaxPlayerCount] of TThemeText;
 
-    AvatarStatic:     array[1..6] of TThemeStatic;
+    AvatarStatic:     array[1..UIni.IMaxPlayerCount] of TThemeStatic;
 
-    TextNotes:            array[1..6] of TThemeText;
-    TextNotesScore:       array[1..6] of TThemeText;
-    TextLineBonus:        array[1..6] of TThemeText;
-    TextLineBonusScore:   array[1..6] of TThemeText;
-    TextGoldenNotes:      array[1..6] of TThemeText;
-    TextGoldenNotesScore: array[1..6] of TThemeText;
-    TextTotal:            array[1..6] of TThemeText;
-    TextTotalScore:       array[1..6] of TThemeText;
+    TextNotes:            array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextNotesScore:       array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextLineBonus:        array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextLineBonusScore:   array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextGoldenNotes:      array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextGoldenNotesScore: array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextTotal:            array[1..UIni.IMaxPlayerCount] of TThemeText;
+    TextTotalScore:       array[1..UIni.IMaxPlayerCount] of TThemeText;
 
-    StaticBoxLightest:    array[1..6] of TThemeStatic;
-    StaticBoxLight:       array[1..6] of TThemeStatic;
-    StaticBoxDark:        array[1..6] of TThemeStatic;
+    StaticBoxLightest:    array[1..UIni.IMaxPlayerCount] of TThemeStatic;
+    StaticBoxLight:       array[1..UIni.IMaxPlayerCount] of TThemeStatic;
+    StaticBoxDark:        array[1..UIni.IMaxPlayerCount] of TThemeStatic;
 
-    StaticRatings:        array[1..6] of TThemeStatic;
+    StaticRatings:        array[1..UIni.IMaxPlayerCount] of TThemeStatic;
 
-    StaticBackLevel:        array[1..6] of TThemeStatic;
-    StaticBackLevelRound:   array[1..6] of TThemeStatic;
-    StaticLevel:            array[1..6] of TThemeStatic;
-    StaticLevelRound:       array[1..6] of TThemeStatic;
+    StaticBackLevel:        array[1..UIni.IMaxPlayerCount] of TThemeStatic;
+    StaticBackLevelRound:   array[1..UIni.IMaxPlayerCount] of TThemeStatic;
+    StaticLevel:            array[1..UIni.IMaxPlayerCount] of TThemeStatic;
+    StaticLevelRound:       array[1..UIni.IMaxPlayerCount] of TThemeStatic;
 
-    ButtonSend:  array[1..3] of TThemeButton;
+    ButtonSend:  array[1..UIni.IMaxPlayerCount] of TThemeButton;
 
     StaticNavigate:   TThemeStatic;
     TextNavigate:     TThemeText;
-
-//    Description:          array[0..5] of string;}
   end;
 
   TThemeTop5 = class(TThemeBasic)
@@ -834,16 +841,17 @@ type
     SelectSorting:      TThemeSelectSlide;
     SelectTabs:         TThemeSelectSlide;
     SelectShowScores:   TThemeSelectSlide;
-    SelectDebug:        TThemeSelectSlide;
+    SelectJoypad:       TThemeSelectSlide;
     ButtonExit:         TThemeButton;
   end;
 
   TThemeOptionsGraphics = class(TThemeBasic)
     SelectFullscreen:       TThemeSelectSlide;
     SelectResolution:       TThemeSelectSlide;
-    SelectDepth:            TThemeSelectSlide;
+	SelectLoadAnimation:  	TThemeSelectSlide;
+    SelectEffectSing:     	TThemeSelectSlide;
+    SelectScreenFade:     	TThemeSelectSlide;
     SelectVisualizer:       TThemeSelectSlide;
-    SelectOscilloscope:     TThemeSelectSlide;
     SelectLineBonus:        TThemeSelectSlide;
     SelectMovieSize:        TThemeSelectSlide;
     ButtonExit:             TThemeButton;
@@ -856,6 +864,7 @@ type
     SelectSlidePreviewVolume:    TThemeSelectSlide;
     SelectSlidePreviewFading:    TThemeSelectSlide;
     SelectSlideVoicePassthrough: TThemeSelectSlide;
+    SelectSlideMusicAutoGain:    TThemeSelectSlide;
     ButtonExit:                  TThemeButton;
   end;
 
@@ -884,10 +893,8 @@ type
   end;
 
   TThemeOptionsAdvanced = class(TThemeBasic)
-    SelectLoadAnimation:  TThemeSelectSlide;
-    SelectEffectSing:     TThemeSelectSlide;
-    SelectScreenFade:     TThemeSelectSlide;
-    SelectLineBonus:      TThemeSelectSlide;
+    SelectDebug:          TThemeSelectSlide;
+    SelectOscilloscope:   TThemeSelectSlide;
     SelectAskbeforeDel:   TThemeSelectSlide;
     SelectOnSongClick:    TThemeSelectSlide;
     SelectPartyPopup:     TThemeSelectSlide;
@@ -944,48 +951,6 @@ type
     ButtonExit:         TThemeButton;
     UpperX, UpperW, UpperY, UpperH,
     LowerX, LowerW, LowerY, LowerH  : integer;
-  end;
-
-  TThemeEdit = class(TThemeBasic)
-    ButtonConvert:        TThemeButton;
-    ButtonExit:           TThemeButton;
-
-    TextDescription:      TThemeText;
-    TextDescriptionLong:  TThemeText;
-    Description:          array[0..5] of UTF8string;
-    DescriptionLong:      array[0..5] of UTF8string;
-  end;
-
-  TThemeEditSub = class(TThemeBasic)
-      //in editor - headers
-      BackgroundImage:     TThemeStatic;
-      ButtonCurrentLine:   TThemeButton;
-      ButtonCurrentNote:   TThemeButton;
-      // buttons
-      PlayOnly:             TThemeButton;
-      PlayWithNote:         TThemeButton;
-      PlayNote:             TThemeButton;
-      previousseq:          TThemeButton;
-      nextseq:              TThemeButton;
-      undo:                 TThemeButton;
-      gold:                 TThemeButton;
-      freestyle:            TThemeButton;
-
-      SlideTitle:          TThemeSelectSlide;
-      SlideArtist:         TThemeSelectSlide;
-      SlideMP3:            TThemeSelectSlide;
-      SlideCover:          TThemeSelectSlide;
-      SlideBackground:     TThemeSelectSlide;
-      SlideBPM:            TThemeSelectSlide;
-      SlideGAP:            TThemeSelectSlide;
-      SlideStart:          TThemeSelectSlide;
-      SlideDuration:       TThemeSelectSlide;
-      SlideTone:           TThemeSelectSlide;
-      SlideLyric:          TThemeSelectSlide;
-      SelectVolAudio:      TThemeSelectSlide;
-      SelectVolMidi:       TThemeSelectSlide;
-      SelectVolClick:      TThemeSelectSlide;
-      SlideVideoGap:       TThemeSelectSlide;
   end;
 
   //Error- and Check-Popup
@@ -1247,7 +1212,14 @@ type
 
   //About
   TThemeAboutMain = class(TThemeBasic)
-    ButtonCredits:    TThemeButton;
+  	StaticBghelper:	  TThemeStatic;
+    ButtonDevelopers: TThemeButton;
+    ButtonExit:       TThemeButton;
+    TextOverview:     TThemeText;
+  end;
+
+  //Developers
+  TThemeDevelopers = class(TThemeBasic)
     ButtonExit:       TThemeButton;
 
     TextOverview:     TThemeText;
@@ -1308,7 +1280,6 @@ type
     Loading:          TThemeLoading;
     Main:             TThemeMain;
     Name:             TThemeName;
-    Level:            TThemeLevel;
     Song:             TThemeSong;
     Sing:             TThemeSing;
     LyricBar:         TThemeLyricBar;
@@ -1330,9 +1301,6 @@ type
     OptionsNetwork:   TThemeOptionsNetwork;
     OptionsWebcam:    TThemeOptionsWebcam;
     OptionsJukebox:   TThemeOptionsJukebox;
-    //edit
-    Edit:             TThemeEdit;
-    EditSub:          TThemeEditSub;
     //error and check popup
     ErrorPopup:         TThemeError;
     CheckPopup:         TThemeCheck;
@@ -1358,6 +1326,7 @@ type
 
     // About
     AboutMain:        TThemeAboutMain;
+	Developers:       TThemeDevelopers;
 
     //Stats Screens:
     StatMain:         TThemeStatMain;
@@ -1442,7 +1411,6 @@ implementation
 uses
   ULanguage,
   USkins,
-  UIni,
   UPathUtils,
   UFileSystem,
   TextGL,
@@ -1480,7 +1448,6 @@ begin
   Loading := TThemeLoading.Create;
   Main := TThemeMain.Create;
   Name := TThemeName.Create;
-  Level := TThemeLevel.Create;
   Song := TThemeSong.Create;
   Sing := TThemeSing.Create;
   Score := TThemeScore.Create;
@@ -1497,9 +1464,6 @@ begin
   OptionsWebcam := TThemeOptionsWebcam.Create;
   OptionsJukebox := TThemeOptionsJukebox.Create;
 
-  Edit := TThemeEdit.Create;
-  EditSub := TThemeEditSub.Create;
-
   ErrorPopup := TThemeError.Create;
   CheckPopup := TThemeCheck.Create;
   InsertUserPopup := TThemeInsertUser.Create;
@@ -1508,6 +1472,7 @@ begin
 
   SongMenu := TThemeSongMenu.Create;
   SongJumpto := TThemeSongJumpto.Create;
+
   //Party Screens
   PartyNewRound := TThemePartyNewRound.Create;
   PartyWin := TThemePartyWin.Create;
@@ -1524,6 +1489,7 @@ begin
 
   // About
   AboutMain :=   TThemeAboutMain.Create;
+  Developers :=   TThemeDevelopers.Create;
 
   //Stats Screens:
   StatMain :=   TThemeStatMain.Create;
@@ -1650,21 +1616,21 @@ begin
       // Loading
       ThemeLoadBasic(Loading, 'Loading');
       ThemeLoadText(Loading.TextLoading, 'LoadingTextLoading');
-      ThemeLoadStatic(Loading.StaticAnimation, 'LoadingStaticAnimation');
 
       // Main
       ThemeLoadBasic(Main, 'Main');
 
       ThemeLoadText(Main.TextDescription, 'MainTextDescription');
       ThemeLoadText(Main.TextDescriptionLong, 'MainTextDescriptionLong');
+      ThemeLoadText(Main.ProgressSongsText, 'MainProgressSongsText');
       ThemeLoadButton(Main.ButtonSolo, 'MainButtonSolo');
       ThemeLoadButton(Main.ButtonMulti, 'MainButtonMulti');
       ThemeLoadButton(Main.ButtonJukebox, 'MainButtonJukebox');
       ThemeLoadButton(Main.ButtonStat, 'MainButtonStats');
-      ThemeLoadButton(Main.ButtonEditor, 'MainButtonEditor');
       ThemeLoadButton(Main.ButtonOptions, 'MainButtonOptions');
-      ThemeLoadButton(Main.ButtonAbout, 'MainButtonAbout');
       ThemeLoadButton(Main.ButtonExit, 'MainButtonExit');
+      ThemeLoadButton(Main.ButtonAbout, 'MainButtonAbout');
+      ThemeLoadStatic(Main.ProgressSong, 'MainProgressSong');
 
       //Main Desc Text Translation Start
 
@@ -1676,14 +1642,12 @@ begin
       Main.DescriptionLong[2] := Language.Translate('SING_JUKEBOX_DESC');
       Main.Description[3] := Language.Translate('SING_STATS');
       Main.DescriptionLong[3] := Language.Translate('SING_STATS_DESC');
-      Main.Description[4] := Language.Translate('SING_EDITOR');
-      Main.DescriptionLong[4] := Language.Translate('SING_EDITOR_DESC');
-      Main.Description[5] := Language.Translate('SING_GAME_OPTIONS');
-      Main.DescriptionLong[5] := Language.Translate('SING_GAME_OPTIONS_DESC');
+      Main.Description[4] := Language.Translate('SING_GAME_OPTIONS');
+      Main.DescriptionLong[4] := Language.Translate('SING_GAME_OPTIONS_DESC');
+      Main.Description[5] := Language.Translate('SING_EXIT');
+      Main.DescriptionLong[5] := Language.Translate('SING_EXIT_DESC');
       Main.Description[6] := Language.Translate('SING_ABOUT');
       Main.DescriptionLong[6] := Language.Translate('SING_ABOUT_DESC');
-      Main.Description[7] := Language.Translate('SING_EXIT');
-      Main.DescriptionLong[7] := Language.Translate('SING_EXIT_DESC');
 
       //Main Desc Text Translation End
 
@@ -1705,21 +1669,14 @@ begin
       ThemeLoadSelectSlide(Name.SelectPlayerColor, 'NameSelectPlayerColor');
       ThemeLoadSelectSlide(Name.SelectPlayerLevel, 'NameSelectPlayerLevel');
 
-      for I := 0 to 5 do
+      for I := 0 to UIni.IMaxPlayerCount-1 do
       begin
-        ThemeLoadStatic(Name.PlayerSelect[I], 'NamePlayerSelectStatic' + IntToStr(I + 1));
-        ThemeLoadText(Name.PlayerSelectText[I], 'NamePlayerSelectStatic' + IntToStr(I + 1) + 'Text');
-        ThemeLoadStatic(Name.PlayerSelectAvatar[I], 'NamePlayerSelectStatic' + IntToStr(I + 1) + 'Avatar');
+        ThemeLoadStatic(Name.PlayerSelect[I], 'NamePlayerSelectStatic' + IntToStr((I + 1)));
+        ThemeLoadText(Name.PlayerSelectText[I], 'NamePlayerSelectStatic' + IntToStr((I + 1)) + 'Text');
+        ThemeLoadStatic(Name.PlayerSelectAvatar[I], 'NamePlayerSelectStatic' + IntToStr((I + 1)) + 'Avatar');
       end;
 
       ThemeLoadButton(Name.PlayerSelectCurrent, 'NamePlayerSelectCurrent');
-
-      // Level
-      ThemeLoadBasic(Level, 'Level');
-
-      ThemeLoadButton(Level.ButtonEasy, 'LevelButtonEasy');
-      ThemeLoadButton(Level.ButtonMedium, 'LevelButtonMedium');
-      ThemeLoadButton(Level.ButtonHard, 'LevelButtonHard');
 
       //Song
       ThemeSongLoad();
@@ -2185,6 +2142,7 @@ begin
       ThemeLoadButton(Options.ButtonGame,     'OptionsButtonGame');
       ThemeLoadButton(Options.ButtonGraphics, 'OptionsButtonGraphics');
       ThemeLoadButton(Options.ButtonSound,    'OptionsButtonSound');
+
       ThemeLoadButton(Options.ButtonLyrics,   'OptionsButtonLyrics');
       ThemeLoadButton(Options.ButtonThemes,   'OptionsButtonThemes');
       ThemeLoadButton(Options.ButtonRecord,   'OptionsButtonRecord');
@@ -2194,20 +2152,21 @@ begin
       ThemeLoadButton(Options.ButtonJukebox,  'OptionsButtonJukebox');
       ThemeLoadButton(Options.ButtonExit,     'OptionsButtonExit');
 
-      Options.Description[0] := Language.Translate('SING_OPTIONS_GAME_DESC');
-      Options.Description[1] := Language.Translate('SING_OPTIONS_GRAPHICS_DESC');
-      Options.Description[2] := Language.Translate('SING_OPTIONS_SOUND_DESC');
-      Options.Description[3] := Language.Translate('SING_OPTIONS_LYRICS_DESC');
-      Options.Description[4] := Language.Translate('SING_OPTIONS_THEMES_DESC');
-      Options.Description[5] := Language.Translate('SING_OPTIONS_RECORD_DESC');
-      Options.Description[6] := Language.Translate('SING_OPTIONS_ADVANCED_DESC');
-      Options.Description[7] := Language.Translate('SING_OPTIONS_NETWORK_DESC');
-      Options.Description[8] := Language.Translate('SING_OPTIONS_WEBCAM_DESC');
-      Options.Description[9] := Language.Translate('SING_OPTIONS_JUKEBOX_DESC');
-      Options.Description[10] := Language.Translate('SING_OPTIONS_EXIT');
+      // Note: always update the indexes constant on top of this unit when changing the order (see OPTIONS_DESC_INDEX_*)
+      Options.Description[OPTIONS_DESC_INDEX_BACK] := Language.Translate('SING_OPTIONS_EXIT');
+      Options.Description[OPTIONS_DESC_INDEX_GAME] := Language.Translate('SING_OPTIONS_GAME_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_GRAPHICS] := Language.Translate('SING_OPTIONS_GRAPHICS_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_SOUND] := Language.Translate('SING_OPTIONS_SOUND_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_LYRICS] := Language.Translate('SING_OPTIONS_LYRICS_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_THEMES] := Language.Translate('SING_OPTIONS_THEMES_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_RECORD] := Language.Translate('SING_OPTIONS_RECORD_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_ADVANCED] := Language.Translate('SING_OPTIONS_ADVANCED_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_NETWORK] := Language.Translate('SING_OPTIONS_NETWORK_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_WEBCAM] := Language.Translate('SING_OPTIONS_WEBCAM_DESC');
+      Options.Description[OPTIONS_DESC_INDEX_JUKEBOX] := Language.Translate('SING_OPTIONS_JUKEBOX_DESC');
 
       ThemeLoadText(Options.TextDescription, 'OptionsTextDescription');
-      Options.TextDescription.Text := Options.Description[0];
+      Options.TextDescription.Text := Options.Description[OPTIONS_DESC_INDEX_GAME]; // Select default first menu button 'Game'
 
       // Options Game
       ThemeLoadBasic(OptionsGame, 'OptionsGame');
@@ -2217,7 +2176,7 @@ begin
       ThemeLoadSelectSlide(OptionsGame.SelectSorting,    'OptionsGameSelectSlideSorting');
       ThemeLoadSelectSlide(OptionsGame.SelectTabs,       'OptionsGameSelectTabs');
       ThemeLoadSelectSlide(OptionsGame.SelectShowScores, 'OptionsGameSelectShowScores');
-      ThemeLoadSelectSlide(OptionsGame.SelectDebug,      'OptionsGameSelectDebug');
+      ThemeLoadSelectSlide(OptionsGame.SelectJoypad,     'OptionsGameSelectJoypad');
       ThemeLoadButton(OptionsGame.ButtonExit,            'OptionsGameButtonExit');
 
       // Options Graphics
@@ -2225,9 +2184,10 @@ begin
 
       ThemeLoadSelectSlide(OptionsGraphics.SelectFullscreen,   'OptionsGraphicsSelectFullscreen');
       ThemeLoadSelectSlide(OptionsGraphics.SelectResolution,   'OptionsGraphicsSelectSlideResolution');
-      ThemeLoadSelectSlide(OptionsGraphics.SelectDepth,        'OptionsGraphicsSelectDepth');
+      ThemeLoadSelectSlide(OptionsGraphics.SelectLoadAnimation, 'OptionsGraphicsSelectLoadAnimation');
+      ThemeLoadSelectSlide(OptionsGraphics.SelectScreenFade,    'OptionsGraphicsSelectScreenFade');
+      ThemeLoadSelectSlide(OptionsGraphics.SelectEffectSing,    'OptionsGraphicsSelectEffectSing');
       ThemeLoadSelectSlide(OptionsGraphics.SelectVisualizer,   'OptionsGraphicsSelectVisualizer');
-      ThemeLoadSelectSlide(OptionsGraphics.SelectOscilloscope, 'OptionsGraphicsSelectOscilloscope');
       ThemeLoadSelectSlide(OptionsGraphics.SelectLineBonus,    'OptionsGraphicsSelectLineBonus');
       ThemeLoadSelectSlide(OptionsGraphics.SelectMovieSize,    'OptionsGraphicsSelectMovieSize');
       ThemeLoadButton(OptionsGraphics.ButtonExit,              'OptionsGraphicsButtonExit');
@@ -2236,14 +2196,13 @@ begin
       ThemeLoadBasic(OptionsSound, 'OptionsSound');
 
       ThemeLoadSelectSlide(OptionsSound.SelectBackgroundMusic,       'OptionsSoundSelectBackgroundMusic');
-      //ThemeLoadSelectSlide(OptionsSound.SelectMicBoost,              'OptionsSoundSelectMicBoost');
       ThemeLoadSelectSlide(OptionsSound.SelectClickAssist,           'OptionsSoundSelectClickAssist');
       ThemeLoadSelectSlide(OptionsSound.SelectBeatClick,             'OptionsSoundSelectBeatClick');
-      //ThemeLoadSelectSlide(OptionsSound.SelectThreshold,             'OptionsSoundSelectThreshold');
       //Song Preview
       ThemeLoadSelectSlide(OptionsSound.SelectSlidePreviewVolume,    'OptionsSoundSelectSlidePreviewVolume');
       ThemeLoadSelectSlide(OptionsSound.SelectSlidePreviewFading,    'OptionsSoundSelectSlidePreviewFading');
       ThemeLoadSelectSlide(OptionsSound.SelectSlideVoicePassthrough, 'OptionsSoundSelectVoicePassthrough');
+      ThemeLoadSelectSlide(OptionsSound.SelectSlideMusicAutoGain,    'OptionsSoundSelectSlideMusicAutoGain');
 
       ThemeLoadButton(OptionsSound.ButtonExit, 'OptionsSoundButtonExit');
 
@@ -2270,17 +2229,15 @@ begin
       ThemeLoadSelectSlide(OptionsRecord.SelectSlideCard,     'OptionsRecordSelectSlideCard');
       ThemeLoadSelectSlide(OptionsRecord.SelectSlideInput,    'OptionsRecordSelectSlideInput');
       ThemeLoadSelectSlide(OptionsRecord.SelectSlideChannel,  'OptionsRecordSelectSlideChannel');
-      ThemeLoadSelectSlide(OptionsRecord.SelectThreshold,     'OptionsSoundSelectThreshold'); //basisbit TODO
-      ThemeLoadSelectSlide(OptionsRecord.SelectMicBoost,      'OptionsSoundSelectMicBoost');
+      ThemeLoadSelectSlide(OptionsRecord.SelectThreshold,     'OptionsRecordSelectThreshold');
+      ThemeLoadSelectSlide(OptionsRecord.SelectMicBoost,      'OptionsRecordSelectMicBoost');
       ThemeLoadButton(OptionsRecord.ButtonExit,               'OptionsRecordButtonExit');
 
       //Options Advanced
       ThemeLoadBasic(OptionsAdvanced, 'OptionsAdvanced');
 
-      ThemeLoadSelectSlide(OptionsAdvanced.SelectLoadAnimation, 'OptionsAdvancedSelectLoadAnimation');
-      ThemeLoadSelectSlide(OptionsAdvanced.SelectScreenFade,    'OptionsAdvancedSelectScreenFade');
-      ThemeLoadSelectSlide(OptionsAdvanced.SelectEffectSing,    'OptionsAdvancedSelectEffectSing');
-      ThemeLoadSelectSlide(OptionsAdvanced.SelectLineBonus,     'OptionsAdvancedSelectLineBonus');
+      ThemeLoadSelectSlide(OptionsAdvanced.SelectDebug,      	'OptionsAdvancedSelectDebug');
+      ThemeLoadSelectSlide(OptionsAdvanced.SelectOscilloscope,  'OptionsAdvancedSelectOscilloscope');
       ThemeLoadSelectSlide(OptionsAdvanced.SelectOnSongClick,   'OptionsAdvancedSelectSlideOnSongClick');
       ThemeLoadSelectSlide(OptionsAdvanced.SelectAskbeforeDel,  'OptionsAdvancedSelectAskbeforeDel');
       ThemeLoadSelectSlide(OptionsAdvanced.SelectPartyPopup,    'OptionsAdvancedSelectPartyPopup');
@@ -2349,48 +2306,6 @@ begin
       OptionsJukebox.LowerH := ThemeIni.ReadInteger('OptionsJukeboxLowerBar', 'H', 0);
 
       ThemeLoadButton(OptionsJukebox.ButtonExit,              'OptionsJukeboxButtonExit');
-
-      //Edit Menu
-      ThemeLoadBasic (Edit,               'Edit');
-
-      ThemeLoadButton(Edit.ButtonConvert, 'EditButtonConvert');
-      ThemeLoadButton(Edit.ButtonExit,    'EditButtonExit');
-
-      Edit.Description[0] := Language.Translate('SING_EDIT_BUTTON_DESCRIPTION_CONVERT');
-      Edit.Description[1] := Language.Translate('SING_EDIT_BUTTON_DESCRIPTION_EXIT');
-
-      ThemeLoadText(Edit.TextDescription, 'EditTextDescription');
-      Edit.TextDescription.Text := Edit.Description[0];
-
-      // editor
-      ThemeLoadBasic (EditSub,               'EditSub');
-      ThemeLoadStatic(EditSub.BackgroundImage, 'EditSubBackgroundImage');
-      // current position in editor
-      ThemeLoadButton(EditSub.ButtonCurrentLine, 'EditSubButtonCurrentLine');
-      ThemeLoadButton(EditSub.ButtonCurrentNote, 'EditSubButtonCurrentNote');
-      ThemeLoadButton(EditSub.PlayOnly,    'EditSubBarStatic1');
-      ThemeLoadButton(EditSub.PlayWithNote,    'EditSubBarStatic2');
-      ThemeLoadButton(EditSub.PlayNote,    'EditSubBarStatic3');
-      ThemeLoadButton(EditSub.previousseq,    'EditSubBarStatic4');
-      ThemeLoadButton(EditSub.nextseq,    'EditSubBarStatic5');
-      ThemeLoadButton(EditSub.gold,    'EditSubBarStatic6');
-      ThemeLoadButton(EditSub.freestyle,    'EditSubBarStatic7');
-      ThemeLoadButton(EditSub.undo,    'EditSubBarStatic8');
-      ThemeLoadSelectSlide(EditSub.SlideTitle, 'EditSubTitle');
-      ThemeLoadSelectSlide(EditSub.SlideArtist, 'EditSubArtist');
-      ThemeLoadSelectSlide(EditSub.SlideMP3, 'EditSubMP3');
-      ThemeLoadSelectSlide(EditSub.SlideCover, 'EditSubSlideCover');
-      ThemeLoadSelectSlide(EditSub.SlideBackground, 'EditSubSlideBG');
-      ThemeLoadSelectSlide(EditSub.SlideBPM, 'EditSubBPM');
-      ThemeLoadSelectSlide(EditSub.SlideGAP, 'EditSubGAP');
-      ThemeLoadSelectSlide(EditSub.SlideStart, 'EditSubStart');
-      ThemeLoadSelectSlide(EditSub.SlideDuration, 'EditSubDuration');
-      ThemeLoadSelectSlide(EditSub.SlideTone, 'EditSubTone');
-      ThemeLoadSelectSlide(EditSub.SlideLyric, 'EditSubLyric');
-      ThemeLoadSelectSlide(EditSub.SelectVolAudio, 'EditSubSelectVolAudio');
-      ThemeLoadSelectSlide(EditSub.SelectVolMidi, 'EditSubSelectVolMidi');
-      ThemeLoadSelectSlide(EditSub.SelectVolClick, 'EditSubSelectVolClick');
-      ThemeLoadSelectSlide(EditSub.SlideVideoGap, 'EditSubVideoGap');
 
       //error popup
       ThemeLoadBasic (ErrorPopup, 'ErrorPopup');
@@ -2561,9 +2476,14 @@ begin
 
       // About
       ThemeLoadBasic(AboutMain, 'AboutMain');
-      ThemeLoadButton(AboutMain.ButtonCredits, 'AboutMainButtonCredits');
+      ThemeLoadButton(AboutMain.ButtonDevelopers, 'AboutMainButtonDevelopers');
       ThemeLoadButton(AboutMain.ButtonExit, 'AboutMainButtonExit');
       ThemeLoadText (AboutMain.TextOverview, 'AboutMainTextOverview');
+	  ThemeLoadStatic(AboutMain.StaticBghelper, 'AboutMainStatico');
+
+      ThemeLoadBasic(Developers, 'Developers');
+      ThemeLoadButton(Developers.ButtonExit, 'DevelopersButtonExit');
+      ThemeLoadText (Developers.TextOverview, 'DevelopersTextOverview');
 
       // Stats
       ThemeLoadBasic(StatMain, 'StatMain');
@@ -3232,12 +3152,18 @@ begin
           Result.B := 95/255;
         end;
     7:  begin
+          // Magenta
+          Result.R := 215/255;
+          Result.G := 0/255;
+          Result.B := 111/255;
+        end;
+    8:  begin
           // brown
           Result.R := 192/255;
           Result.G := 127/255;
           Result.B := 31/255;
         end;
-    8:  begin
+    9:  begin
           // black
           Result.R := 0;
           Result.G := 0;
@@ -3282,73 +3208,79 @@ begin
       Result.G := 255/255;
       Result.B := 0;
     end;
-    5: //orange
+    5: //Magenta
+    begin
+      Result.R := 215/255;
+      Result.G := 0/255;
+      Result.B := 111;
+    end;
+    6: //orange
     begin
       Result.R := 255/255;
       Result.G := 127/255;
       Result.B := 0;
     end;
-    6: //pink
+    7: //pink
     begin
       Result.R := 255/255;
       Result.G := 110/255;
       Result.B := 180/255;
     end;
-    7: //purple
+    8: //purple
     begin
       Result.R := 175/255;
       Result.G := 0;
       Result.B := 210/255;
     end;
-    8: //gold
+    9: //gold
     begin
       Result.R := 218/255;
       Result.G := 165/255;
       Result.B := 32/255;
     end;
-    9: //gray
+    10: //gray
     begin
       Result.R := 150/255;
       Result.G := 150/255;
       Result.B := 150/255;
     end;
-    10: //dark blue
+    11: //dark blue
     begin
       Result.R := 0;
       Result.G := 0;
       Result.B := 220/255;
     end;
-    11: //sky
+    12: //sky
     begin
       Result.R := 0;
       Result.G := 110/255;
       Result.B := 210/255;
     end;
-    12: //cyan
+    13: //cyan
     begin
       Result.R := 0/255;
       Result.G := 215/255;
       Result.B := 215/255;
     end;
-    13: //flame
+    14: //flame
     begin
       Result.R := 210/255;
       Result.G := 70/255;
       Result.B := 0/255;
     end;
-    14: //orchid
+    15: //orchid
     begin
       Result.R := 210/255;
       Result.G := 0;
       Result.B := 210/255;
     end;
-    15: //harlequin
+    16: //harlequin
     begin
       Result.R := 110/255;
       Result.G := 210/255;
       Result.B := 0;
     end;
-    16: //lime
+    17: //lime
     begin
       Result.R := 160/255;
       Result.G := 210/255;
@@ -3390,31 +3322,37 @@ begin
       Result.G := 246/255;
       Result.B := 143/255;
     end;
-    5: //orange
+    5: //Magenta
+    begin
+      Result.R := 215/255;
+      Result.G := 0/255;
+      Result.B := 111/255;
+    end;
+    6: //orange
     begin
       Result.R := 255/255;
       Result.G := 204/255;
       Result.B := 156/255;
     end;
-    6: //pink
+    7: //pink
     begin
       Result.R := 255/255;
       Result.G := 192/255;
       Result.B := 205/255;
     end;
-    7: //purple
+    8: //purple
     begin
       Result.R := 240/255;
       Result.G := 170/255;
       Result.B := 255/255;
     end;
-    8: //gold
+    9: //gold
     begin
       Result.R := 255/255;
       Result.G := 214/255;
       Result.B := 118/255;
     end;
-    9: //gray
+    10: //gray
     begin
       Result.R := 220/255;
       Result.G := 220/255;
@@ -3456,73 +3394,79 @@ begin
       Result.G := 246/255;
       Result.B := 143/255;
     end;
-    5: //orange
+    5: //Magenta
+    begin
+      Result.R := 215/255;
+      Result.G := 0/255;
+      Result.B := 111/255;
+    end;
+    6: //orange
     begin
       Result.R := 255/255;
       Result.G := 204/255;
       Result.B := 156/255;
     end;
-    6: //pink
+    7: //pink
     begin
       Result.R := 255/255;
       Result.G := 192/255;
       Result.B := 205/255;
     end;
-    7: //violet
+    8: //violet
     begin
       Result.R := 240/255;
       Result.G := 170/255;
       Result.B := 255/255;
     end;
-    8: //gold
+    9: //gold
     begin
       Result.R := 255/255;
       Result.G := 214/255;
       Result.B := 118/255;
     end;
-    9: //gray
+    10: //gray
     begin
       Result.R := 220/255;
       Result.G := 220/255;
       Result.B := 220/255;
     end;
-    10: //dark blue
+    11: //dark blue
     begin
       Result.R := 90/255;
       Result.G := 90/255;
       Result.B := 255/255;
     end;
-    11: //sky
+    12: //sky
     begin
       Result.R := 80/255;
       Result.G := 160/255;
       Result.B := 235/255;
     end;
-    12: //cyan
+    13: //cyan
     begin
       Result.R := 150/255;
       Result.G := 230/255;
       Result.B := 230/255;
     end;
-    13: //flame
+    14: //flame
     begin
       Result.R := 230/255;
       Result.G := 130/255;
       Result.B := 80/255;
     end;
-    14: //orchid
+    15: //orchid
     begin
       Result.R := 230/255;
       Result.G := 100/255;
       Result.B := 230/255;
     end;
-    15: //harlequin
+    16: //harlequin
     begin
       Result.R := 160/255;
       Result.G := 230/255;
       Result.B := 90/255;
     end;
-    16: //lime
+    17: //lime
     begin
       Result.R := 190/255;
       Result.G := 230/255;
@@ -3646,13 +3590,19 @@ begin
           Result.G := 255/255;
           Result.B := 0;
         end;
-    7:  begin
+    7: //Magenta
+    begin
+      Result.R := 215/255;
+      Result.G := 0/255;
+      Result.B := 111/255;
+    end;
+    8:  begin
           // brown
           Result.R := 192/255;
           Result.G := 127/255;
           Result.B := 31/255;
         end;
-    8:  begin
+    9:  begin
           // black
           Result.R := 0;
           Result.G := 0;
@@ -3660,67 +3610,67 @@ begin
         end;
         //New Theme-Color Patch End
         // daniel20 colors
-    9:  //Turquoise
+    10:  //Turquoise
         begin
           Result.R := 0/255;
           Result.G := 255/255;
           Result.B := 230/255;
         end;
-    10: //Salmon
+    11: //Salmon
         begin
           Result.R := 255/255;
           Result.G := 127/255;
           Result.B := 102/255;
         end;
-    11: //GreenYellow
+    12: //GreenYellow
         begin
           Result.R := 153/255;
           Result.G := 255/255;
           Result.B := 102/255;
         end;
-    12: //Lavender
+    13: //Lavender
         begin
           Result.R := 204/255;
           Result.G := 204/255;
           Result.B := 255/255;
         end;
-    13: //Beige
+    14: //Beige
         begin
           Result.R := 255/255;
           Result.G := 230/255;
           Result.B := 204/255;
         end;
-    14: //Teal
+    15: //Teal
         begin
           Result.R := 51/255;
           Result.G := 153/255;
           Result.B := 153/255;
         end;
-    15: //Orchid
+    16: //Orchid
         begin
           Result.R := 153/255;
           Result.G := 0;
           Result.B := 204/255;
         end;
-    16: //SteelBlue
+    17: //SteelBlue
         begin
           Result.R := 51/255;
           Result.G := 102/255;
           Result.B := 153/255;
         end;
-    17: //Plum
+    18: //Plum
         begin
           Result.R := 255/255;
           Result.G := 153/255;
           Result.B := 255/255;
         end;
-    18: //Chocolate
+    19: //Chocolate
         begin
           Result.R := 138/255;
           Result.G := 92/255;
           Result.B := 46/255;
         end;
-    19: //Gold
+    20: //Gold
         begin
           Result.R := 255/255;
           Result.G := 204/255;
@@ -3827,8 +3777,6 @@ begin
 end;
 
 procedure TTheme.ThemeSave(const FileName: string);
-var
-  I: integer;
 begin
   {$IFDEF THEMESAVE}
   ThemeIni := TIniFile.Create(FileName);
@@ -3843,18 +3791,12 @@ begin
   ThemeSaveText(Main.TextDescriptionLong, 'MainTextDescriptionLong');
   ThemeSaveButton(Main.ButtonSolo, 'MainButtonSolo');
 
-  ThemeSaveButton(Main.ButtonEditor, 'MainButtonEditor');
   ThemeSaveButton(Main.ButtonOptions, 'MainButtonOptions');
   ThemeSaveButton(Main.ButtonExit, 'MainButtonExit');
 
   ThemeSaveBasic(Name, 'Name');
 
   //ThemeSaveButton(Name.PlayerName, 'NameButtonPlayer');
-
-  ThemeSaveBasic(Level, 'Level');
-  ThemeSaveButton(Level.ButtonEasy, 'LevelButtonEasy');
-  ThemeSaveButton(Level.ButtonMedium, 'LevelButtonMedium');
-  ThemeSaveButton(Level.ButtonHard, 'LevelButtonHard');
 
   ThemeSaveBasic(Song, 'Song');
   ThemeSaveText(Song.TextArtist, 'SongTextArtist');
@@ -4273,6 +4215,9 @@ begin
   //Duet Icon
   ThemeLoadStatic(Song.DuetIcon, 'Song' + prefix + 'DuetIcon');
 
+  //Rap Icon
+  ThemeLoadStatic(Song.RapIcon, 'Song' + prefix + 'RapIcon');
+
   //Show Cat in TopLeft Mod
   ThemeLoadStatic(Song.StaticCat, 'Song' + prefix + 'StaticCat');
   ThemeLoadText(Song.TextCat, 'Song' + prefix + 'TextCat');
@@ -4290,7 +4235,7 @@ begin
   // 4 - slide
   // 5 - list
   // 6 - mosaic
-  
+
   if (TSongMenuMode(Ini.SongMenu) in [smChessboard, smMosaic]) then
   begin
     Song.Cover.Rows := ThemeIni.ReadInteger('Song' + prefix + 'Cover', 'Rows', 4);
@@ -4315,6 +4260,7 @@ begin
 
   if (TSongMenuMode(Ini.SongMenu) = smList) then
   begin
+    Song.Cover.Rows := ThemeIni.ReadInteger('Song' + prefix + 'Cover', 'Rows', 4);
     Song.Cover.SelectX := ThemeIni.ReadInteger('Song' + prefix + 'Cover', 'SelectX', 300);
     Song.Cover.SelectY := ThemeIni.ReadInteger('Song' + prefix + 'Cover', 'SelectY', 120);
     Song.Cover.SelectW := ThemeIni.ReadInteger('Song' + prefix + 'Cover', 'SelectW', 325);
@@ -4440,9 +4386,6 @@ begin
   freeandnil(Name);
   Name := TThemeName.Create;
 
-  freeandnil(Level);
-  Level := TThemeLevel.Create;
-
   freeandnil(Song);
   Song := TThemeSong.Create;
 
@@ -4457,6 +4400,9 @@ begin
 
   freeandnil(AboutMain);
   AboutMain := TThemeAboutMain.Create;
+
+  freeandnil(Developers);
+  Developers := TThemeDevelopers.Create;
 
   freeandnil(Score);
   Score := TThemeScore.Create;
@@ -4496,12 +4442,6 @@ begin
 
   freeandnil(OptionsJukebox);
   OptionsJukebox := TThemeOptionsJukebox.Create;
-
-  freeandnil(Edit);
-  Edit := TThemeEdit.Create;
-
-  freeandnil(EditSub);
-  EditSub := TThemeEditSub.Create;
 
   freeandnil(ErrorPopup);
   ErrorPopup := TThemeError.Create;
