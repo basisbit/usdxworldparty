@@ -1,20 +1,41 @@
-; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
-; UltraStar Deluxe Un/Installer: Variables
+﻿; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
+; UltraStar Deluxe WorldParty Un/Installer: Variables
 ; ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~ ~+~
 
 ; Product Information:
 
-!define version "RC 1" ; Make sure version is also set in onInit
-!define version2 "16.10"
+!define VersionStr "19.2"
+!define FullVersion "19.2" 
+
+!define installername " Installer"
+!define installerexe "WorldParty ${VersionStr} installer"
+
+
+; generated
+!define version "${VersionStr}"
+!define meta StrLower($version)
+
 
 !define name "UltraStar Deluxe WorldParty"
 !define publisher "UltraStar España"
-!define homepage "http://ultrastar-es.org"
+!define homepage "https://ultrastar-es.org"
+!define forum "https://ultrastar-es.org/foro"
+!define wiki "https://github.com/ultrastares/usdxworldparty/wiki"
 
-
-!define exe "ultrastardx"
+!define exe "WorldParty"
+!define exeuninstall "Uninstall"
+!define exeupdate "Update"
 
 !define license ".\dependencies\documents\license.txt"
+
+; Installer
+
+!define installer_version_path "$LOCALAPPDATA\Temp\WorldParty"
+!define installer_exe_path "$LOCALAPPDATA\Temp\WorldPartyupdate.exe"
+;!define version_url "https://github.com/ultrastares/usdxworldparty/blob/master/VERSION"
+;!define update_url "https://github.com/ultrastares/usdxworldparty/releases/download/%VERSION%/UltraStar.Deluxe.WorldParty_%VERSIONSTRING%-installer.exe"
+!define update_mask_online_version "%VERSION%"
+!define update_mask_installer_version "%VERSIONSTRING%"
 
 ; Icons
 
@@ -28,16 +49,10 @@
 
 ; Registry for Start menu entries:
 
-!define PRODUCT_NAME "${name} ${version}"
+!define PRODUCT_NAME "${name}"
 !define PRODUCT_VERSION "${version}"
 !define PRODUCT_PUBLISHER "${publisher}"
 !define PRODUCT_WEB_SITE "${homepage}"
-!define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${name} ${version}"
+!define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${name}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
-
-; Download URLs for Songs and Themes:
-
-; SONGS
-
-; THEMES
-; (removed theme section - currently no additional skins available for this usdx version)
+!define PRODUCT_PATH "$PROGRAMFILES\${name}"

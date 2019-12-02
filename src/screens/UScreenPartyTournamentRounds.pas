@@ -1,27 +1,25 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/screens/UScreenPartyWin.pas $
- * $Id: UScreenPartyWin.pas 2246 2010-04-18 13:43:36Z tobigun $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
+
 
 unit UScreenPartyTournamentRounds;
 
@@ -44,7 +42,7 @@ uses
   UDisplay,
   UMusic,
   UPartyTournament,
-  UScreenSing,
+  UScreenSingController,
   UScreenPartyTournamentWin,
   UThemes;
 
@@ -134,7 +132,6 @@ end;
 
 function TScreenPartyTournamentRounds.ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean;
 var
-  p, I: integer;
   SDL_ModState: word;
   Player: integer;
 begin
@@ -176,7 +173,7 @@ begin
             LoadPlayersColors;
 
             freeandnil(ScreenSing);
-            ScreenSing  := TScreenSing.Create;
+            ScreenSing  := TScreenSingController.Create;
 
             AudioPlayback.PlaySound(SoundLib.Start);
             FadeTo(@ScreenSong);
@@ -624,16 +621,12 @@ begin
     2: Valor := 14;
   end;
 
-  if (Total < Valor) then
-    Result := true
-  else
-    Result := false;
-
+  Result := (Total < Valor);
 end;
 
 function TScreenPartyTournamentRounds.GetPlayers8Final(): NextPlayers;
 var
-  I, Count: integer;
+  Count: integer;
   _Next: NextPlayers;
   Find: boolean;
 begin
@@ -936,21 +929,16 @@ begin
 end;
 
 function TScreenPartyTournamentRounds.Draw: boolean;
-var
-  I, J, Count: integer;
 begin
   DrawBG;
-
   DrawGrid();
-
-  DrawFG;
+  Result := DrawFG;
 
 end;
 
 procedure TScreenPartyTournamentRounds.DrawGrid();
 var
   I, J: integer;
-  CurrentTick: cardinal;
   MaxPhase: integer;
 begin
   DrawGridBlock1();
@@ -991,8 +979,8 @@ end;
 procedure TScreenPartyTournamentRounds.DrawGridBlock1();
 var
   X, Y, W, H, Y1, Y2,
-  YQ1, YQ2, YQ3, YQ4, YQ5, YQ6, YQ7, YQ8,
-  YS1, YS2, YS3, YS4, YF1, YF2: real;
+  YQ1, YQ2, YQ3, YQ4,// YQ5, YQ6, YQ7, YQ8,
+  YS1, YS2, YF1: real; //YS3, YS4 , YF2
   I: integer;
 begin
   H := 5;
@@ -1005,18 +993,18 @@ begin
   YQ2 := 0;
   YQ3 := 0;
   YQ4 := 0;
-  YQ5 := 0;
-  YQ6 := 0;
-  YQ7 := 0;
-  YQ8 := 0;
+  // YQ5 := 0;
+  // YQ6 := 0;
+  // YQ7 := 0;
+  // YQ8 := 0;
 
   YS1 := 0;
   YS2 := 0;
-  YS3 := 0;
-  YS4 := 0;
+  // YS3 := 0;
+  // YS4 := 0;
 
   YF1 := 0;
-  YF2 := 0;
+  // YF2 := 0;
 
   // left players block
   for I := 0 to 7 do
@@ -1345,8 +1333,8 @@ end;
 procedure TScreenPartyTournamentRounds.DrawGridBlock2();
 var
   X, Y, W, H, Y1, Y2,
-  YQ1, YQ2, YQ3, YQ4, YQ5, YQ6, YQ7, YQ8,
-  YS1, YS2, YS3, YS4, YF1, YF2: real;
+  YQ1, YQ2, YQ3, YQ4,// YQ5, YQ6, YQ7, YQ8,
+  YS1, YS2, YF1: real;// YS3, YS4, , YF2
   I: integer;
 begin
 
@@ -1360,18 +1348,18 @@ begin
   YQ2 := 0;
   YQ3 := 0;
   YQ4 := 0;
-  YQ5 := 0;
-  YQ6 := 0;
-  YQ7 := 0;
-  YQ8 := 0;
+  // YQ5 := 0;
+  // YQ6 := 0;
+  // YQ7 := 0;
+  // YQ8 := 0;
 
   YS1 := 0;
   YS2 := 0;
-  YS3 := 0;
-  YS4 := 0;
+  // YS3 := 0;
+  // YS4 := 0;
 
   YF1 := 0;
-  YF2 := 0;
+  // YF2 := 0;
 
   // right players block
   for I := 0 to 7 do

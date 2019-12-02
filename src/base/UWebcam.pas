@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UPlaylist.pas $
- * $Id: $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UWebcam;
@@ -136,11 +133,8 @@ var
 begin
   if (IsEnabled = true) and((SDL_GetTicks() - LastTickFrame) >= 1000/StrToInt(IWebcamFPS[Ini.WebCamFPS])) then
   begin
-    if (TextureCam.TexNum > 0) then
-    begin
-      glDeleteTextures(1, PGLuint(@TextureCam.TexNum));
-      TextureCam.TexNum := 0;
-    end;
+    if TextureCam.TexNum > 0 then
+      UTexture.Texture.UnLoadTexture(TextureCam);
 
     WebcamFrame := cvQueryFrame(Capture);
 
@@ -178,7 +172,6 @@ end;
 function TWebcam.FrameEffect(Nr_Effect: integer; Frame: PIplImage): PIplImage;
 var
   Size: CvSize;
-  HalfSize: CvSize;
   CamEffectParam: integer;
   ImageFrame, EffectFrame, DiffFrame: PIplImage;
 begin
@@ -196,7 +189,6 @@ begin
   end;
 
   Size  := cvSizeV(Frame.width, Frame.height);
-  HalfSize  := cvSizeV(Frame.width/2, Frame.height/2);
 
   ImageFrame := cvCreateImage(Size, Frame.depth, 1);
   EffectFrame := cvCreateImage(Size, Frame.depth, 1);
@@ -324,16 +316,12 @@ end;
 
 function TWebcam.FrameAdjust(Frame: PIplImage): PIplImage;
 var
-  I, J: integer;
   Size: CvSize;
-  HalfSize: CvSize;
   BrightValue, SaturationValue, HueValue: integer;
-  BrightValueConvt, SaturationValueConvt, HueValueConvt: real;
+  BrightValueConvt: real;
   ImageFrame, TmpFrame, HueFrame, SaturationFrame, ValueFrame: PIplImage;
 begin
-
   Size  := cvSizeV(Frame.width, Frame.height);
-  HalfSize  := cvSizeV(Frame.width/2, Frame.height/2);
 
   ImageFrame := cvCreateImage(Size, Frame.depth, 1);
   TmpFrame := cvCreateImage(Size, Frame.depth, 3);
@@ -360,11 +348,6 @@ begin
   // Saturation
   if (SaturationValue <> 100) then
   begin
-    if (SaturationValue > 100) then
-      SaturationValueConvt := (SaturationValue - 100) * 255/100
-    else
-      SaturationValueConvt := -((SaturationValue - 100) * -255/100);
-
     // Convert from Red-Green-Blue to Hue-Saturation-Value
 //    cvCvtColor(Frame, TmpFrame, CV_BGR2HSV );
 
@@ -382,19 +365,14 @@ begin
   // Hue
   if (HueValue <> 180) then
   begin
-    if (HueValue > 100) then
-      HueValueConvt := (HueValue - 100) * 255/100
-    else
-      HueValueConvt := -((HueValue - 100) * -255/100);
-
     // Convert from Red-Green-Blue to Hue-Saturation-Value
     cvCvtColor(Frame, TmpFrame, CV_BGR2RGB );
 
     // Split hue, saturation and value of hsv on them
-    cvSplit(TmpFrame, HueFrame, SaturationFrame, ValueFrame, 0);
+    cvSplit(TmpFrame, HueFrame, SaturationFrame, ValueFrame, nil);
     //cvCvtColor(ImageFrame, Frame, CV_GRAY2RGB);
 
-    cvMerge(SaturationFrame, HueFrame, ValueFrame, 0, Frame);
+    cvMerge(SaturationFrame, HueFrame, ValueFrame, nil, Frame);
 
     // convert back for displaying
     //cvCvtColor(TmpFrame, Frame, CV_BGR2RGB);

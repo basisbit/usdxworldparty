@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL$
- * $Id$
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+	
+	UltraStar Deluxe WorldParty is the legal property of its developers, 
+	whose names	are too numerous to list here. Please refer to the 
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see 
+	<http://www.gnu.org/licenses/>.
  *}
 
 // Auto
@@ -50,62 +47,48 @@ type
   private
     FallbackEncoder: IEncoder;
     UTF8Encoder: IEncoder;
-    Regex: PPCRE;
-    RegexExtra: PPCREExtra;
   end;
 
-function PCREGetMem(Size: SizeInt): Pointer; cdecl;
+function IsUtf8(const str: AnsiString): boolean;
+var
+  i, len: LongInt;
+  c, state: Integer;
 begin
-  GetMem(Result, Size);
-end;
-
-procedure PCREFreeMem(P: Pointer); cdecl;
-begin
-  FreeMem(P);
-end;
-
-// NOTICE: Log.LogError/ConsoleWriteLn/DebugWriteLn are initialized yet
-procedure ShowError(const msg: string);
-begin
-  {$IFDEF CONSOLE}
-  WriteLn('ERROR: ', msg);
-  {$ENDIF}
+  len := Length(str);
+  state := 0;
+  for i := 1 to len do
+  begin
+    c := $100 * state + Ord(str[i]);
+    case c of
+    $09,$0A,$0D,$20..$7E: state := 0; // [\x09\x0A\x0D\x20-\x7E]
+    $C2..$DF:             state := 1; // [\xC2-\xDF][\x80-\xBF]
+    $E0:                  state := 2; // \xE0[\xA0-\xBF][\x80-\xBF]
+    $E1..$EC,$EE,$EF:     state := 3; // [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}
+    $ED:                  state := 4; // \xED[\x80-\x9F][\x80-\xBF]
+    $F0:                  state := 5; // \xF0[\x90-\xBF][\x80-\xBF]{2}
+    $F1..$F3:             state := 6; // [\xF1-\xF3][\x80-\xBF]{3}
+    $F4:                  state := 7; // \xF4[\x80-\x8F][\x80-\xBF]{2}
+    $180..$1BF:           state := 0; // [\x80-\xBF]
+    $2A0..$2BF:           state := 1; // [\xA0-\xBF][\x80-\xBF]
+    $380..$3BF:           state := 1; // [\x80-\xBF]{2}
+    $480..$49F:           state := 1; // [\x80-\x9F][\x80-\xBF]
+    $590..$5BF:           state := 3; // [\x90-\xBF][\x80-\xBF]{2}
+    $680..$6BF:           state := 3; // [\x80-\xBF]{3}
+    $780..$78F:           state := 3; // [\x80-\x8F][\x80-\xBF]{2}
+    else begin
+        Result := False;
+        exit;
+      end;
+    end;
+  end;
+  Result := (state = 0);
 end;
 
 constructor TEncoderAuto.Create(const UTF8Encoder, FallbackEncoder: IEncoder);
-var
-  Error: PChar;
-  ErrorOffset: Integer;
 begin
   inherited Create();
   self.FallbackEncoder := FallbackEncoder;
   self.UTF8Encoder := UTF8Encoder;
-
-  // Load and initialize PCRE Library
-  if LoadPCRE() then
-  begin
-    // compile regex
-    self.Regex := pcre_compile('\A([\x09\x0A\x0D\x20-\x7E]|[\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|\xED[\x80-\x9F][\x80-\xBF]|\xF0[\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|\xF4[\x80-\x8F][\x80-\xBF]{2})*\z', 0, @Error, @ErrorOffset, nil);
-
-    if self.Regex = Nil then
-    begin
-      ShowError(Format('UTF8 Regex compilation failed: %s at %d', [Error, ErrorOffset]));
-    end
-    else
-    begin
-      // if compiled successfull, try to get more informations the speed up the matching
-      self.RegexExtra := pcre_study(self.Regex, 0, @Error);
-
-      if Error <> Nil then
-      begin
-        ShowError('UTF8 Regex study failed: ' + Error);
-      end;
-    end;
-  end
-  else
-  begin
-    ShowError('pcre not loaded. utf-8 autodetection will not work.');
-  end;
 end;
 
 function TEncoderAuto.GetName(): AnsiString;
@@ -117,18 +100,10 @@ function TEncoderAuto.Decode(const InStr: AnsiString; out OutStr: UCS4String): b
 var
   RegexResults: Integer;
 begin
-  if (self.Regex <> Nil) then
-  begin
-    RegexResults := pcre_exec(Regex, RegexExtra, PChar(InStr), Length(InStr), 0, 0, Nil, 0);
-
-    if RegexResults >= 0 then
-    begin
-      Result := UTF8Encoder.Decode(InStr, OutStr);
-      Exit;
-    end;
-  end;
-
-  Result := FallbackEncoder.Decode(InStr, OutStr);
+  if IsUtf8(InStr) then
+    Result := UTF8Encoder.Decode(InStr, OutStr)
+  else
+    Result := FallbackEncoder.Decode(InStr, OutStr);
 end;
 
 function TEncoderAuto.Encode(const InStr: UCS4String; out OutStr: AnsiString): boolean;

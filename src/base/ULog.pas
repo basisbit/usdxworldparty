@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/base/ULog.pas $
- * $Id: ULog.pas 3117 2015-08-15 01:23:56Z basisbit $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit ULog;
@@ -39,13 +36,13 @@ uses
 
 (*
  * LOG_LEVEL_[TYPE] defines the "minimum" index for logs of type TYPE. Each
- * level greater than this BUT less or equal than LOG_LEVEL_[TYPE]_MAX is of this type.  
+ * level greater than this BUT less or equal than LOG_LEVEL_[TYPE]_MAX is of this type.
  * This means a level "LOG_LEVEL_ERROR >= Level <= LOG_LEVEL_ERROR_MAX" e.g.
  * "Level := LOG_LEVEL_ERROR+2" is considered an error level.
  * This is nice for debugging if you have more or less important debug messages.
  * For example you can assign LOG_LEVEL_DEBUG+10 for the more important ones and
  * LOG_LEVEL_DEBUG+20 for less important ones and so on. By changing the log-level
- * you can hide the less important ones.  
+ * you can hide the less important ones.
  *)
 const
   LOG_LEVEL_DEBUG_MAX    = MaxInt;
@@ -66,6 +63,8 @@ const
   LOG_LEVEL_DEFAULT      = LOG_LEVEL_WARN;
   LOG_FILE_LEVEL_DEFAULT = LOG_LEVEL_ERROR;
 
+  CONSOLE_SCROLLBACK_SIZE = 512;
+
 type
   TLog = class
   private
@@ -73,12 +72,16 @@ type
     LogFileOpened:       boolean;
     BenchmarkFile:       TextFile;
     BenchmarkFileOpened: boolean;
+    ConsoleBuffer: TStringList; // stores logged messages for in-game console, capped to CONSOLE_SCROLLBACK_SIZE
 
     LogLevel: integer;
     // level of messages written to the log-file
     LogFileLevel: integer;
 
     procedure LogToFile(const Text: string);
+
+    function GetConsoleCount: integer;
+
   public
     BenchmarkTimeStart:   array[0..31] of real;
     BenchmarkTimeLength:  array[0..31] of real;//TDateTime;
@@ -119,6 +122,13 @@ type
     procedure LogVoice(SoundNr: integer);
     // buffer
     procedure LogBuffer(const buf : Pointer; const bufLength : Integer; const filename : IPath);
+
+    // console
+    property ConsoleCount: integer read GetConsoleCount;
+    function GetConsole(const index: integer; FromTheBeginning: boolean = false): string;
+    procedure LogConsole(const Text: string);
+    procedure ClearConsoleLog;
+
   end;
 
 procedure DebugWriteln(const aString: String);
@@ -133,7 +143,7 @@ uses
   DateUtils,
   URecord,
   UMain,
-  UMusic,  
+  UMusic,
   UTime,
   UCommon,
   UCommandLine,
@@ -141,7 +151,7 @@ uses
 
 (*
  * Write to console if in debug mode (Thread-safe).
- * If debug-mode is disabled nothing is done. 
+ * If debug-mode is disabled nothing is done.
  *)
 procedure DebugWriteln(const aString: string);
 begin
@@ -158,6 +168,7 @@ end;
 
 constructor TLog.Create;
 begin
+  ConsoleBuffer := TStringList.Create;
   inherited;
   LogLevel := LOG_LEVEL_DEFAULT;
   LogFileLevel := LOG_FILE_LEVEL_DEFAULT;
@@ -172,6 +183,8 @@ begin
   //  CloseFile(AnalyzeFile);
   if LogFileOpened then
     CloseFile(LogFile);
+
+  ConsoleBuffer.Free;
   inherited;
 end;
 
@@ -196,6 +209,7 @@ var
   MilisecondsS: string;
 
   ValueText:    string;
+  Time: real;
 begin
   if (FileOutputEnabled and Params.Benchmark) then
   begin
@@ -222,9 +236,12 @@ begin
 
     if BenchmarkFileOpened then
     begin
-      Miliseconds := Trunc(Frac(BenchmarkTimeLength[Number]) * 1000);
-      Seconds := Trunc(BenchmarkTimeLength[Number]) mod 60;
-      Minutes := Trunc((BenchmarkTimeLength[Number] - Seconds) / 60);
+      BenchmarkEnd(Number);
+      Time := BenchmarkTimeLength[Number];
+      BenchmarkStart(Number);
+      Miliseconds := Trunc(Frac(Time) * 1000);
+      Seconds := Trunc(Time) mod 60;
+      Minutes := Trunc((Time - Seconds) / 60);
       //ValueText := FloatToStr(BenchmarkTimeLength[Number]);
 
       {
@@ -342,12 +359,14 @@ begin
     else
       LogMsg := 'DEBUG:  ' + Text;
 
+    LogMsg := '['+DatetoStr(now)+' '+TimetoStr(now)+'] '+LogMsg;
     // output log-message
     if (Level <= LogLevel) then
     begin
       DebugWriteLn(LogMsg);
+      LogConsole(LogMsg);
     end;
-    
+
     // write message to log-file
     if (Level <= LogFileLevel) then
     begin
@@ -476,7 +495,7 @@ begin
 
   // open output file
   Stream := TBinaryFileStream.Create(FileName, fmCreate);
-  
+
   // write wav-file header
   if (UseWavFile) then
   begin
@@ -523,6 +542,26 @@ begin
   end;
 end;
 
+procedure TLog.ClearConsoleLog;
+begin
+  ConsoleBuffer.Clear;
+end;
+
+function TLog.GetConsole(const index: integer; FromTheBeginning: boolean = false): string;
+begin
+  if FromTheBeginning then Result := ConsoleBuffer[index]
+  else Result := ConsoleBuffer[ConsoleBuffer.Count-1-index];
+end;
+
+function TLog.GetConsoleCount: integer;
+begin
+  Result := ConsoleBuffer.Count;
+end;
+
+procedure TLog.LogConsole(const Text: string);
+begin
+  ConsoleBuffer.Insert(0, Text);
+  if ConsoleBuffer.Count > CONSOLE_SCROLLBACK_SIZE then ConsoleBuffer.Capacity:=CONSOLE_SCROLLBACK_SIZE;
+end;
+
 end.
-
-

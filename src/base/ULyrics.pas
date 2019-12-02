@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/ULyrics.pas $
- * $Id: ULyrics.pas 1939 2009-11-09 00:27:55Z s_alexander $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit ULyrics;
@@ -36,22 +33,20 @@ interface
 uses
   dglOpenGL,
   UCommon,
+  UIni,
   UTexture,
   UThemes,
   UMusic;
 
 type
-  // stores two textures for enabled/disabled states
-  TPlayerIconTex = array [0..1] of TTexture;
-
   TLyricsEffect = (lfxSimple, lfxZoom, lfxSlide, lfxBall, lfxShift);
-  
+
   PLyricWord = ^TLyricWord;
   TLyricWord = record
     X:          real;     // left corner
     Width:      real;     // width
-    Start:      cardinal; // start of the word in quarters (beats)
-    Length:     cardinal; // length of the word in quarters
+    Start:      Longint; // start of the word in quarters (beats)
+    Length:     Longint; // length of the word in quarters
     Text:       UTF8String; // text
     Freestyle:  boolean;  // is freestyle?
   end;
@@ -88,16 +83,11 @@ type
       QueueFull:      boolean;       // set to true if the queue is full and a line will be replaced with the next AddLine
       LCounter:       integer;       // line counter
 
-      // duet mode - textures for player icons
-      // FIXME: do not use a fixed player count, use MAX_PLAYERS instead
-      PlayerIconTex:  array[0..5] of TPlayerIconTex;
-
       // Some helper procedures for lyric drawing
       procedure DrawLyrics (Beat: real);
       procedure UpdateLineMetrics(LyricLine: TLyricLine);
       procedure DrawLyricsWords(LyricLine: TLyricLine; X, Y: real; StartWord, EndWord: integer);
       procedure DrawLyricsLine(X, W, Y, H: real; Line: TLyricLine; Beat: real);
-      procedure DrawPlayerIcon(Player: byte; Enabled: boolean; X, Y: real; Size, Alpha: real);
       procedure DrawBall(XBall, YBall, Alpha: real);
 
     public
@@ -132,7 +122,6 @@ type
 
       // song specific settings
       BPM:            real;
-      Resolution:     integer;
 
       // properties to easily read options of this class
       property IsQueueFull: boolean read QueueFull;  // line in queue?
@@ -142,7 +131,7 @@ type
       procedure Draw (Beat: real);                 // draw the current (active at beat) lyrics
 
       // clears all cached song specific information
-      procedure Clear(cBPM: real = 0; cResolution: integer = 0);
+      procedure Clear(cBPM: real = 0);
 
       function GetUpperLine(): TLyricLine;
       function GetLowerLine(): TLyricLine;
@@ -163,8 +152,7 @@ uses
   UGraphic,
   UDisplay,
   ULog,
-  math,
-  UIni;
+  math;
 
 { TLyricLine }
 
@@ -208,7 +196,6 @@ begin
   inherited Create();
 
   BPM := 0;
-  Resolution := 0;
   LCounter := 0;
   QueueFull := False;
 
@@ -246,10 +233,9 @@ end;
 {**
  * Clears all cached Song specific Information.
  *}
-procedure TLyricEngine.Clear(cBPM: real; cResolution: integer);
+procedure TLyricEngine.Clear(cBPM: real);
 begin
   BPM := cBPM;
-  Resolution := cResolution;
   LCounter := 0;
   QueueFull := False;
 
@@ -270,13 +256,6 @@ begin
 
   // ball for current word hover in ball effect
   BallTex := Texture.LoadTexture(Skin.GetTextureFileName('Ball'), TEXTURE_TYPE_TRANSPARENT, 0);
-
-  // duet mode: load player icon
-  for I := 0 to 5 do
-  begin
-    PlayerIconTex[I][0] := Texture.LoadTexture(Skin.GetTextureFileName('LyricIcon_P' + InttoStr(I+1)), TEXTURE_TYPE_TRANSPARENT, 0);
-    PlayerIconTex[I][1] := Texture.LoadTexture(Skin.GetTextureFileName('LyricIconD_P' + InttoStr(I+1)), TEXTURE_TYPE_TRANSPARENT, 0);
-  end;
 end;
 
 {**
@@ -318,7 +297,7 @@ begin
 
   // reset line state
   LyricLine.Reset();
-                          
+
   // check if sentence has notes
   if (Line <> nil) and (Length(Line.Note) > 0) then
   begin
@@ -368,35 +347,6 @@ procedure TLyricEngine.DrawLyrics(Beat: real);
 begin
   DrawLyricsLine(UpperLineX, UpperLineW, UpperLineY, UpperLineH, UpperLine, Beat);
   DrawLyricsLine(LowerLineX, LowerLineW, LowerLineY, LowerLineH, LowerLine, Beat);
-end;
-
-{**
- * Draws a Player's icon.
- *}
-procedure TLyricEngine.DrawPlayerIcon(Player: byte; Enabled: boolean; X, Y: real; Size, Alpha: real);
-var
-  IEnabled: byte;
-begin
-  if Enabled then
-    IEnabled := 0
-  else
-    IEnabled := 1;
-
-  glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glBindTexture(GL_TEXTURE_2D, PlayerIconTex[Player][IEnabled].TexNum);
-
-  glColor4f(1, 1, 1, Alpha);
-  glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(X, Y);
-    glTexCoord2f(0, 1); glVertex2f(X, Y + Size);
-    glTexCoord2f(1, 1); glVertex2f(X + Size, Y + Size);
-    glTexCoord2f(1, 0); glVertex2f(X + Size, Y);
-  glEnd;
-
-  glDisable(GL_BLEND);
-  glDisable(GL_TEXTURE_2D);
 end;
 
 {**
@@ -537,16 +487,6 @@ begin
   // do not draw empty lines
   if (Length(Line.Words) = 0) then
     Exit;
-
-  {
-  // duet mode
-  IconSize := (2 * Height);
-  IconAlpha := Frac(Beat/(Resolution*4));
-
-  DrawPlayerIcon (0, True, X, Y + (42 - IconSize) / 2 , IconSize, IconAlpha);
-  DrawPlayerIcon (1, True, X + IconSize + 1,  Y + (42 - IconSize) / 2, IconSize, IconAlpha);
-  DrawPlayerIcon (2, True, X + (IconSize + 1)*2, Y + (42 - IconSize) / 2, IconSize, IconAlpha);
-  }
 
   // set font size and style
   SetFontStyle(FontStyle);
@@ -840,4 +780,3 @@ begin
 end;
 
 end.
-

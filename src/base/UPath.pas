@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL$
- * $Id$
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UPath;
@@ -44,7 +41,7 @@ uses
   LazUTF8Classes,
   {$ENDIF}
   UConfig,
-  UUnicodeStringHelper,
+  UUnicodeUtils,
   SDL2;
 
 type
@@ -81,7 +78,7 @@ type
     procedure UpdateFile; override;
     property UTF8Encoded: boolean READ FUTF8Encoded WRITE FUTF8Encoded;
   end;
-  
+
   {**
    * TBinaryFileStream (inherited from THandleStream)
    *}
@@ -154,8 +151,8 @@ type
 
   {**
    * pdKeep:   Keep path as is, neither remove or append a delimiter
-   * pdAppend: Append a delimiter if path does not have a trailing one 
-   * pdRemove: Remove a trailing delimiter from the path 
+   * pdAppend: Append a delimiter if path does not have a trailing one
+   * pdRemove: Remove a trailing delimiter from the path
    *}
   TPathDelimOption = (pdKeep, pdAppend, pdRemove);
 
@@ -277,7 +274,7 @@ type
 
     {**
      * Splits the path into its components. Path delimiters are not removed from
-     * components. 
+     * components.
      * Example: C:\test\my\dir -> ['C:\', 'test\', 'my\', 'dir']
      *}
     function SplitDirs(): IPathDynArray;
@@ -359,10 +356,6 @@ type
     function DeleteEmptyDir(): boolean;
     function Rename(const NewName: IPath): boolean;
     function CopyFile(const Target: IPath; FailIfExists: boolean): boolean;
-
-    // TODO: Dirwatch stuff
-    // AddFileChangeListener(Listener: TFileChangeListener);
-
     {**
      * Internal string representation. For debugging only.
      *}
@@ -565,9 +558,9 @@ type
 
 function Path(const PathName: RawByteString; DelimOption: TPathDelimOption): IPath;
 begin
-  if (IsUTF8StringH(PathName)) then
+  if (UUnicodeUtils.IsUTF8String(PathName)) then
     Result := TPathImpl.Create(PathName, DelimOption)
-  else if (IsNativeUTF8H()) then
+  else if (UUnicodeUtils.IsNativeUTF8()) then
     Result := PATH_NONE
   else
     Result := TPathImpl.Create(AnsiToUtf8(PathName), DelimOption);
@@ -626,7 +619,7 @@ begin
       fName[I] := PathDelim;
   end;
 
-  // Include/ExcludeTrailingPathDelimiter need PathDelim as path delimiter 
+  // Include/ExcludeTrailingPathDelimiter need PathDelim as path delimiter
   case DelimOption of
     pdAppend: fName := IncludeTrailingPathDelimiter(fName);
     pdRemove: fName := ExcludeTrailingPathDelimiter(fName);
@@ -668,7 +661,7 @@ end;
 
 function TPathImpl.ToNative(): RawByteString;
 begin
-  if (IsNativeUTF8H()) then
+  if (UUnicodeUtils.IsNativeUTF8()) then
     Result := fName
   else //basisbit hackyhack
     Result := Utf8ToAnsi(fName);
@@ -1131,7 +1124,7 @@ begin
   inherited Create();
   fMode := Mode;
   fFilename := Filename;
-  fLineBreak := sLineBreak;
+  fLineBreak := AnsiString(#13#10); //Windows-Style Linebreak. Older USDX versions don't support other formats.
 end;
 
 function TTextFileStream.ReadLine(var Line: UTF8String): boolean;

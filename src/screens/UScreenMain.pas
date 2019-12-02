@@ -1,259 +1,191 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/screens/UScreenMain.pas $
- * $Id: UScreenMain.pas 3128 2015-08-28 01:45:23Z basisbit $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
+
 
 unit UScreenMain;
 
 interface
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
+{$MODE OBJFPC}
 
 {$I switches.inc}
 
 uses
-  ULog,
   MD5,
-  UMenu,
   sdl2,
-  UDisplay,
-  UMusic,
-  UFiles,
-  USong,
-  UScreenSong,
   SysUtils,
+  UDisplay,
+  UFiles,
+  UMenu,
+  UMusic,
+  ULog,
+  USong,
+  UTexture,
   UThemes;
 
 type
-
   TScreenMain = class(TMenu)
-  private
-    { ticks when the user interacted, used to start credits
-      after a period of time w/o user interaction }
-    UserInteractionTicks: cardinal;
-
-  public
-    TextDescription:     integer;
-    TextDescriptionLong: integer;
-
-    constructor Create; override;
-    function ParseInput(PressedKey: Cardinal; CharCode: UCS4Char;
-      PressedDown: boolean): boolean; override;
-    function ParseMouse(MouseButton: integer; BtnDown: boolean; X, Y: integer): boolean; override;
-    procedure OnShow; override;
-    procedure SetInteraction(Num: integer); override;
-    procedure SetAnimationProgress(Progress: real); override;
-    function Draw: boolean; override;
+    public
+      constructor Create(); override;
+      function ParseInput(PressedKey: Cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean; override;
+      function Draw: boolean; override;
+      procedure OnShow; override;
+      procedure SetInteraction(Num: integer); override;
+      procedure SetAnimationProgress(Progress: real); override;
+    private
+      TextDescription, TextDescriptionLong, TextProgressSongs: integer;
+      function CheckSongs(): boolean;
   end;
-
-const
-  { start credits after 60 seconds w/o interaction }
-  TicksUntilCredits = 5 * 60 * 1000;
 
 implementation
 
 uses
+  dglOpenGL,
   UGraphic,
   UNote,
   UIni,
-  UTexture,
   USongs,
   ULanguage,
   UParty,
-  UScreenCredits,
-  USkins,
+  UScreenPlayerSelection,
+  UScreenSong,
+  UScreenPartyOptions,
+  UScreenJukeboxPlaylist,
+  UScreenOptions,
+  UScreenStatMain,
+  UScreenAbout,
   UUnicodeUtils;
 
-function TScreenMain.ParseInput(PressedKey: Cardinal; CharCode: UCS4Char;
-  PressedDown: boolean): boolean;
-var
-  SDL_ModState: word;
+const
+  ITEMS_PER_ROW = 3;   // Number of buttons for row of buttons in Main menu.
+
+function TScreenMain.ParseInput(PressedKey: Cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean;
 begin
   Result := true;
-
-  { reset user interaction timer }
-  UserInteractionTicks := SDL_GetTicks;
-
-  SDL_ModState := SDL_GetModState and (KMOD_LSHIFT + KMOD_RSHIFT +
-    KMOD_LCTRL + KMOD_RCTRL + KMOD_LALT + KMOD_RALT);
-
   if (PressedDown) then
-  begin // Key Down
-        // check normal keys
+  begin
+    //check normal keys
     case UCS4UpperCase(CharCode) of
-      Ord('Q'): begin
-        Result := false;
-        Exit;
-      end;
-      Ord('C'): begin
-         FadeTo(@ScreenCredits, SoundLib.Start);
-         Exit;
-      end;
-      Ord('M'): begin
-        if (Ini.Players >= 1) and (Party.ModesAvailable) then
-        begin
-          FadeTo(@ScreenPartyOptions, SoundLib.Start);
-          Exit;
-        end;
-      end;
-
-      Ord('S'): begin
-        FadeTo(@ScreenStatMain, SoundLib.Start);
-        Exit;
-      end;
-
-      Ord('E'): begin
-        FadeTo(@ScreenEdit, SoundLib.Start);
-        Exit;
-      end;
-    end;
-
-    // check special keys
-    case PressedKey of
-      SDLK_ESCAPE,
-      SDLK_BACKSPACE:
-      begin
-        Result := false;
-      end;
-
-      SDLK_RETURN:
-      begin
-        // reset
-        Party.bPartyGame := false;
-
-        //Solo
-        if (Interaction = 0) then
-        begin
-          if (Songs.SongList.Count >= 1) then
-          begin
-            if (Ini.Players >= 0) and (Ini.Players <= 3) then
-              PlayersPlay := Ini.Players + 1;
-            if (Ini.Players = 4) then
-              PlayersPlay := 6;
-
-            if Ini.OnSongClick = sSelectPlayer then
-              FadeTo(@ScreenSong)
-            else
-            begin
-              ScreenName.Goto_SingScreen := false;
-              FadeTo(@ScreenName, SoundLib.Start);
-            end;
-          end
-          else //show error message
-            ScreenPopupError.ShowPopup(Language.Translate('ERROR_NO_SONGS'));
-        end;
-
-        //Party
-        if Interaction = 1 then
-        begin
-          if (Songs.SongList.Count >= 1) then
-          begin
-            Party.bPartyGame := true;
-
-            FadeTo(@ScreenPartyOptions, SoundLib.Start);
-          end
-          else //show error message, No Songs Loaded
-            ScreenPopupError.ShowPopup(Language.Translate('ERROR_NO_SONGS'));
-        end;
-
-        //Jukebox
-        if Interaction = 2 then
-        begin
-          if (Songs.SongList.Count >= 1) then
-          begin
-            FadeTo(@ScreenJukeboxPlaylist, SoundLib.Start);
-          end
-          else //show error message, No Songs Loaded
-            ScreenPopupError.ShowPopup(Language.Translate('ERROR_NO_SONGS'));
-        end;
-
-        //Stats
-        if Interaction = 3 then
-        begin
-          FadeTo(@ScreenStatMain, SoundLib.Start);
-        end;
-
-        //Editor
-        if Interaction = 4 then
-        begin
-          {$IFDEF UseMIDIPort}
-          FadeTo(@ScreenEdit, SoundLib.Start);
-          {$ELSE}
-          ScreenPopupError.ShowPopup(Language.Translate('ERROR_NO_EDITOR'));
-          {$ENDIF}
-        end;
-
-        //Options
-        if Interaction = 5 then
-        begin
-          FadeTo(@ScreenOptions, SoundLib.Start);
-        end;
-
-        //About
-        if Interaction = 6 then
-        begin
-          FadeTo(@ScreenAbout, SoundLib.Start);
-        end;
-
-        //Exit
-        if Interaction = 7 then
+      Ord('Q'):
         begin
           Result := false;
+          Exit;
         end;
-      end;
-      {**
-       * Up and Down could be done at the same time,
-       * but I don't want to declare variables inside
-       * functions like this one, called so many times
-       *}
-      SDLK_DOWN: InteractInc;
-      SDLK_UP: InteractDec;
-      SDLK_RIGHT: InteractNext;
-      SDLK_LEFT: InteractPrev;
+    end;
+
+    //check special keys
+    case PressedKey of
+      SDLK_ESCAPE, SDLK_BACKSPACE:
+        Result := false;
+      SDLK_RETURN:
+        begin
+          if (Interaction < 3) and (not Assigned(UGraphic.ScreenSong)) then //loaded in draw, but a fast interaction can finish here in crash
+            UGraphic.ScreenSong := TScreenSong.Create();
+
+          //reset
+          Party.bPartyGame := false;
+          case Interaction of
+            0: //solo
+            begin
+              if Self.CheckSongs then
+              begin
+                UGraphic.ScreenSong.Mode := smNormal;
+                if (Ini.Players >= 0) and (Ini.Players <= 3) then
+                  UNote.PlayersPlay := Ini.Players + 1;
+                if (Ini.Players = 4) then
+                  UNote.PlayersPlay := 6;
+
+                if Ini.OnSongClick = sSelectPlayer then
+                  FadeTo(@ScreenSong)
+                else
+                begin
+                  if not Assigned(UGraphic.ScreenName) then
+                    UGraphic.ScreenName := TScreenName.Create();
+
+                  ScreenName.Goto_SingScreen := false;
+                  FadeTo(@ScreenName, SoundLib.Start);
+                end;
+              end;
+            end;
+            1: //party
+            begin
+              if Self.CheckSongs then
+              begin
+                if not Assigned(UGraphic.ScreenPartyOptions) then //load the screens only the first time
+                  UGraphic.ScreenPartyOptions := TScreenPartyOptions.Create();
+
+                Party.bPartyGame := true;
+                FadeTo(@ScreenPartyOptions, SoundLib.Start);
+              end
+            end;
+            2: //jukebox
+            begin
+              if not Assigned(UGraphic.ScreenJukeboxPlaylist) then //load the screens only the first time
+                UGraphic.ScreenJukeboxPlaylist := TScreenJukeboxPlaylist.Create();
+
+              if Self.CheckSongs then
+                FadeTo(@ScreenJukeboxPlaylist, SoundLib.Start);
+            end;
+            3: //stats
+            begin
+              if not Assigned(UGraphic.ScreenStatMain) then //load the screens only the first time
+                UGraphic.ScreenStatMain := TScreenStatMain.Create();
+
+              if Self.CheckSongs then
+                FadeTo(@ScreenStatMain, SoundLib.Start);
+            end;
+            4: //options
+            begin
+              if not Assigned(UGraphic.ScreenOptions) then //load the screens only the first time
+                UGraphic.ScreenOptions := TScreenOptions.Create();
+
+              FadeTo(@UGraphic.ScreenOptions, SoundLib.Start);
+            end;
+            5: //exit
+              Result := false;
+            6: //about
+            begin
+              if not Assigned(UGraphic.ScreenAbout) then //load the screens only the first time
+                UGraphic.ScreenAbout := TScreenAbout.Create();
+
+              FadeTo(@ScreenAbout, SoundLib.Start);
+            end;
+          end;
+        end;
+      SDLK_DOWN:
+        InteractMainNextRow(ITEMS_PER_ROW);
+      SDLK_UP:
+        InteractMainPrevRow(ITEMS_PER_ROW);
+      SDLK_RIGHT:
+        InteractNext;
+      SDLK_LEFT:
+        InteractPrev;
     end;
   end
-  else // Key Up
-    case PressedKey of
-      SDLK_RETURN:
-      begin
-      end;
-    end;
 end;
 
-function TScreenMain.ParseMouse(MouseButton: integer; BtnDown: boolean; X, Y: integer): boolean;
+constructor TScreenMain.Create();
 begin
-  // default mouse behaviour
-  Result := inherited ParseMouse(MouseButton, BtnDown, X, Y);
-
-  { reset user interaction timer }
-  UserInteractionTicks := SDL_GetTicks;
-end;
-
-constructor TScreenMain.Create;
-begin
-  inherited Create;
+  inherited Create();
 {**
  * Attention ^^:
  * New Creation Order needed because of LoadFromTheme
@@ -262,21 +194,44 @@ begin
  * Then LoadFromTheme
  * after LoadFromTheme the Buttons and Selects
  *}
-  TextDescription     := AddText(Theme.Main.TextDescription);
+  TextDescription := AddText(Theme.Main.TextDescription);
   TextDescriptionLong := AddText(Theme.Main.TextDescriptionLong);
+  TextProgressSongs := AddText(Theme.Main.ProgressSongsText);
 
   LoadFromTheme(Theme.Main);
 
   AddButton(Theme.Main.ButtonSolo);
   AddButton(Theme.Main.ButtonMulti);
   AddButton(Theme.Main.ButtonJukebox);
+
   AddButton(Theme.Main.ButtonStat);
-  AddButton(Theme.Main.ButtonEditor);
   AddButton(Theme.Main.ButtonOptions);
-  AddButton(Theme.Main.ButtonAbout);
   AddButton(Theme.Main.ButtonExit);
 
+  AddButton(Theme.Main.ButtonAbout);
   Interaction := 0;
+end;
+
+function TScreenMain.Draw: boolean;
+var
+  ProgressSong: TProgressSong;
+begin
+  inherited Draw;
+  Result := true;
+  ProgressSong := USongs.Songs.GetLoadProgress();
+  if not ProgressSong.Finished then //while song loading show progress
+  begin
+    Self.Text[TextDescriptionLong].Visible := false;
+    Self.Text[TextProgressSongs].Text := ProgressSong.Folder+': '+IntToStr(ProgressSong.Total);
+  end
+  else if Self.Text[TextDescriptionLong].Visible = false then //after finish song loading, return to normal mode and close popup
+  begin
+    UGraphic.ScreenSong := TScreenSong.Create();
+    Self.Text[TextDescriptionLong].Visible := true;
+    Self.Text[TextProgressSongs].Visible := false;
+    if ProgressSong.Total > 0 then
+      UGraphic.ScreenPopupError.Visible := false;
+  end;
 end;
 
 procedure TScreenMain.OnShow;
@@ -285,27 +240,12 @@ begin
 
   SoundLib.StartBgMusic;
 
-  ScreenSong.Mode := smNormal;
-
  {**
   * Clean up TPartyGame here
   * at the moment there is no better place for this
   *}
   Party.Clear;
 
-  { reset user interaction timer }
-  UserInteractionTicks := SDL_GetTicks;
-end;
-
-function TScreenMain.Draw: boolean;
-begin
-  Result := inherited Draw;
-
-  { start credits after a period w/o user interaction }
-  if (UserInteractionTicks + TicksUntilCredits < SDL_GetTicks) then
-  begin
-    FadeTo(@ScreenCredits, SoundLib.Start);
-  end;
 end;
 
 procedure TScreenMain.SetInteraction(Num: integer);
@@ -319,6 +259,17 @@ procedure TScreenMain.SetAnimationProgress(Progress: real);
 begin
   Statics[0].Texture.ScaleW := Progress;
   Statics[0].Texture.ScaleH := Progress;
+end;
+
+function TScreenMain.CheckSongs(): boolean;
+begin
+  Result := false;
+  if USongs.Songs.GetLoadProgress().Folder <> '' then
+    UGraphic.ScreenPopupError.ShowPopup(Language.Translate('ERROR_LOADING_SONGS'))
+  else if Songs.SongList.Count = 0 then
+    UGraphic.ScreenPopupError.ShowPopup(Language.Translate('ERROR_NO_SONGS'))
+  else
+    Result := true;
 end;
 
 end.

@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/screens/UScreenScore.pas $
- * $Id: UScreenScore.pas 2246 2010-04-18 13:43:36Z tobigun $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UScreenScore;
@@ -44,6 +41,7 @@ uses
   dglOpenGL,
   math,
   UTexture,
+  UIni,
   UDLLManager,
   UWebSDK;
 
@@ -104,9 +102,9 @@ type
       BarTime:            cardinal;
       FinishScreenDraw:   boolean;
 
-      aPlayerScoreScreenTextures: array[1..6] of TPlayerScoreScreenTexture;
-      aPlayerScoreScreenDatas:    array[1..6] of TPlayerScoreScreenData;
-      aPlayerScoreScreenRatings:  array[1..6] of TPlayerScoreRatingPics;
+      aPlayerScoreScreenTextures: array[1..UIni.IMaxPlayerCount] of TPlayerScoreScreenTexture;
+      aPlayerScoreScreenDatas:    array[1..UIni.IMaxPlayerCount] of TPlayerScoreScreenData;
+      aPlayerScoreScreenRatings:  array[1..UIni.IMaxPlayerCount] of TPlayerScoreRatingPics;
 
       BarScore_EaseOut_Step:  real;
       BarPhrase_EaseOut_Step: real;
@@ -117,20 +115,21 @@ type
 
       TextArtistTitle:        integer;
 
-      TextName:             array[1..6] of integer;
-      TextScore:            array[1..6] of integer;
+      TextName:             array[1..UIni.IMaxPlayerCount] of integer;
+      TextScore:            array[1..UIni.IMaxPlayerCount] of integer;
 
-      TextNotes:            array[1..6] of integer;
-      TextNotesScore:       array[1..6] of integer;
-      TextLineBonus:        array[1..6] of integer;
-      TextLineBonusScore:   array[1..6] of integer;
-      TextGoldenNotes:      array[1..6] of integer;
-      TextGoldenNotesScore: array[1..6] of integer;
-      TextTotal:            array[1..6] of integer;
-      TextTotalScore:       array[1..6] of integer;
+      TextNotes:            array[1..UIni.IMaxPlayerCount] of integer;
+      TextNotesScore:       array[1..UIni.IMaxPlayerCount] of integer;
+      TextLineBonus:        array[1..UIni.IMaxPlayerCount] of integer;
+      TextLineBonusScore:   array[1..UIni.IMaxPlayerCount] of integer;
+      TextGoldenNotes:      array[1..UIni.IMaxPlayerCount] of integer;
+      TextGoldenNotesScore: array[1..UIni.IMaxPlayerCount] of integer;
+      TextTotal:            array[1..UIni.IMaxPlayerCount] of integer;
+      TextTotalScore:       array[1..UIni.IMaxPlayerCount] of integer;
 
-      PlayerStatic:         array[1..6] of array of integer;
-      AvatarStatic:         array[1..6] of integer;
+      PlayerStatic:         array[1..UIni.IMaxPlayerCount] of array of integer;
+      AvatarStatic:         array[1..UIni.IMaxPlayerCount] of integer;
+      AvatarStaticRef:      array[1..UIni.IMaxPlayerCount] of Integer;
       { texture pairs for swapping when screens = 2
         first array level: index of player ( actually this is a position
           1    - Player 1 if PlayersPlay = 1 <- we don't need swapping here
@@ -138,12 +137,12 @@ type
           4..6 - Player 1 - 3 or 4 - 6 if PlayersPlay = 3 or 6 )
         second array level: different playerstatics for positions
         third array level: texture for screen 1 or 2 }
-      PlayerStaticTextures: array[1..6] of array of array [1..2] of TPlayerStaticTexture;
-      PlayerTexts:          array[1..6] of array of integer;
+      PlayerStaticTextures: array[1..UIni.IMaxPlayerCount] of array of array [1..2] of TPlayerStaticTexture;
+      PlayerTexts:          array[1..UIni.IMaxPlayerCount] of array of integer;
 
-      StaticBoxLightest:    array[1..6] of integer;
-      StaticBoxLight:       array[1..6] of integer;
-      StaticBoxDark:        array[1..6] of integer;
+      StaticBoxLightest:    array[1..UIni.IMaxPlayerCount] of integer;
+      StaticBoxLight:       array[1..UIni.IMaxPlayerCount] of integer;
+      StaticBoxDark:        array[1..UIni.IMaxPlayerCount] of integer;
       { texture pairs for swapping when screens = 2
         for boxes
         first array level: index of player ( actually this is a position
@@ -152,22 +151,22 @@ type
           4..6 - Player 1 - 3 or 4 - 6 if PlayersPlay = 3 or 6 )
         second array level: different boxes for positions (0: lightest; 1: light; 2: dark)
         third array level: texture for screen 1 or 2 }
-      PlayerBoxTextures: array[1..6] of array[0..2] of array [1..2] of TPlayerStaticTexture;
+      PlayerBoxTextures: array[1..UIni.IMaxPlayerCount] of array[0..2] of array [1..2] of TPlayerStaticTexture;
 
-      StaticBackLevel:      array[1..6] of integer;
-      StaticBackLevelRound: array[1..6] of integer;
-      StaticLevel:          array[1..6] of integer;
-      StaticLevelRound:     array[1..6] of integer;
+      StaticBackLevel:      array[1..UIni.IMaxPlayerCount] of integer;
+      StaticBackLevelRound: array[1..UIni.IMaxPlayerCount] of integer;
+      StaticLevel:          array[1..UIni.IMaxPlayerCount] of integer;
+      StaticLevelRound:     array[1..UIni.IMaxPlayerCount] of integer;
 
       Animation:            real;
       Voice:                integer;
 
-      TextScore_ActualValue:  array[1..6] of integer;
-      TextPhrase_ActualValue: array[1..6] of integer;
-      TextGolden_ActualValue: array[1..6] of integer;
+      TextScore_ActualValue:  array[1..UIni.IMaxPlayerCount] of integer;
+      TextPhrase_ActualValue: array[1..UIni.IMaxPlayerCount] of integer;
+      TextGolden_ActualValue: array[1..UIni.IMaxPlayerCount] of integer;
 
-      ButtonSend: array[1..3] of integer;
-      ActualRound:          integer;
+      ButtonSend: array[1..UIni.IMaxPlayerCount] of integer;
+      CurrentRound:          integer;
       StaticNavigate:       integer;
       TextNavigate:         integer;
 
@@ -217,18 +216,18 @@ implementation
 uses
   UAvatars,
   UGraphic,
-  UScreenSong,
-  UMenuStatic,
-  UTime,
-  UIni,
-  USkins,
-  ULog,
   ULanguage,
+  ULog,
+  UMenuStatic,
   UNote,
-  USong,
   UPathUtils,
-  UUnicodeUtils,
-  UScreenPopup;
+  USkins,
+  USong,
+  UScreenTop5,
+  UScreenPopup,
+  UScreenSong,
+  UTime,
+  UUnicodeUtils;
 
 {
  *****************************
@@ -264,7 +263,7 @@ begin
   end;
 
   SendStatus := DllMan.WebsiteSendScore(SendInfo);
-  
+
   case SendStatus of
     0: ScreenPopupError.ShowPopup(Language.Translate('WEBSITE_NO_CONNECTION'));
     2: ScreenPopupError.ShowPopup(Language.Translate('WEBSITE_LOGIN_ERROR'));
@@ -338,16 +337,13 @@ begin
       SendInfo.Password := UDataBase.DataBase.NetworkUser[ScreenPopupSendScore.SelectValueW].UserList[ScreenPopupSendScore.SelectValueU].Password;
     end;
 
-    SendInfo.Name := '';
-    if (ScreenPopUpSendScore.SelectValueU <> High(ScreenPopUpSendScore.IUsername)) and (UDataBase.DataBase.NetworkUser[ScreenPopupSendScore.SelectValueW].UserList[ScreenPopupSendScore.SelectValueU].SendSavePlayer = 1) then
-      SendInfo.Name := Ini.Name[ScreenPopupSendScore.SelectValueP];
-
     index := ScreenPopupSendScore.SelectValueP;
     SendInfo.ScoreInt := player[index].ScoreInt;
     SendInfo.ScoreLineInt := player[index].ScoreLineInt;
     SendInfo.ScoreGoldenInt := player[index].ScoreGoldenInt;
     SendInfo.MD5Song := ScreenSing.Act_MD5Song;
     SendInfo.Level := ScreenSing.Act_Level;
+    SendInfo.Name := player[index].Name;
 
     if (Value = 1) then
       SendScore(SendInfo, Website);
@@ -423,12 +419,12 @@ begin
         begin
           if (ScreenSong.Mode = smMedley) then
           begin
-            if ActualRound<Length(PlaylistMedley.Stats)-1 then
-            begin
-              AudioPlayback.PlaySound(SoundLib.Change);
-              inc(ActualRound);
-              RefreshTexts;
-            end;
+            if (CurrentRound < Length(PlaylistMedley.Stats)-1) then
+              inc(CurrentRound)
+            else
+              CurrentRound := 0;
+
+            RefreshTexts;
 
             if not (Ini.SavePlayback=1) then
               StartPreview
@@ -448,12 +444,12 @@ begin
         begin
           if (ScreenSong.Mode = smMedley) then
           begin
-            if ActualRound>0 then
-            begin
-              AudioPlayback.PlaySound(SoundLib.Change);
-              dec(ActualRound);
-              RefreshTexts;
-            end;
+            if (CurrentRound > 0) then
+              dec(CurrentRound)
+            else
+              CurrentRound := Length(PlaylistMedley.Stats)-1;
+
+            RefreshTexts;
 
             if not (Ini.SavePlayback=1) then
               StartPreview
@@ -481,10 +477,13 @@ var
 begin
   Result := True;
 
+  //TODO: adapt for players 7 to 12
   case PlayersPlay of
     1 : button_s := ButtonSend[1];
     2, 4: button_s := ButtonSend[2];
     3, 6: button_s := ButtonSend[3];
+  else
+    button_s := ButtonSend[3];
   end;
 
   min_x := Button[button_s].X;
@@ -503,7 +502,7 @@ begin
   else
     SetInteraction(-1);
 
-  if (MouseButton = SDL_BUTTON_LEFT) and BtnDown then
+  if (MouseButton in [SDL_BUTTON_RIGHT, SDL_BUTTON_LEFT]) and BtnDown then
     ParseInput(SDLK_RETURN, 0, true);
 
 end;
@@ -513,17 +512,17 @@ var
   P:    integer;
 
 begin
-  if (ActualRound < Length(PlaylistMedley.Stats)-1) then
+  if (CurrentRound < Length(PlaylistMedley.Stats)-1) then
   begin
-    Text[TextArtist].Text      := IntToStr(ActualRound+1) + '/' +
+    Text[TextArtist].Text      := IntToStr(CurrentRound+1) + '/' +
       IntToStr(Length(PlaylistMedley.Stats)-1) + ': ' +
-      PlaylistMedley.Stats[ActualRound].SongArtist;
-    Text[TextTitle].Text       := PlaylistMedley.Stats[ActualRound].SongTitle;
+      PlaylistMedley.Stats[CurrentRound].SongArtist;
+    Text[TextTitle].Text       := PlaylistMedley.Stats[CurrentRound].SongTitle;
     Text[TextTitle].Visible    := true;
-    Text[TextArtistTitle].Text := IntToStr(ActualRound+1) + '/' +
+    Text[TextArtistTitle].Text := IntToStr(CurrentRound+1) + '/' +
       IntToStr(Length(PlaylistMedley.Stats)-1) + ': ' +
-      PlaylistMedley.Stats[ActualRound].SongArtist +
-      ' - ' + PlaylistMedley.Stats[ActualRound].SongTitle;
+      PlaylistMedley.Stats[CurrentRound].SongArtist +
+      ' - ' + PlaylistMedley.Stats[CurrentRound].SongTitle;
   end else
   begin
     if (ScreenSong.Mode = smMedley) then
@@ -533,11 +532,11 @@ begin
       Text[TextArtistTitle].Text := Language.Translate('SING_TOTAL');
     end else
     begin
-      Text[TextArtist].Text      := PlaylistMedley.Stats[ActualRound].SongArtist;
-      Text[TextTitle].Text       := PlaylistMedley.Stats[ActualRound].SongTitle;
+      Text[TextArtist].Text      := PlaylistMedley.Stats[CurrentRound].SongArtist;
+      Text[TextTitle].Text       := PlaylistMedley.Stats[CurrentRound].SongTitle;
       Text[TextTitle].Visible    := true;
-      Text[TextArtistTitle].Text := PlaylistMedley.Stats[ActualRound].SongArtist + ' - ' +
-        PlaylistMedley.Stats[ActualRound].SongTitle;
+      Text[TextArtistTitle].Text := PlaylistMedley.Stats[CurrentRound].SongArtist + ' - ' +
+        PlaylistMedley.Stats[CurrentRound].SongTitle;
     end;
   end;
 
@@ -545,12 +544,13 @@ begin
   begin
 
     for P := 0 to PlayersPlay - 1 do
-      Player[P] := PlaylistMedley.Stats[ActualRound].Player[P];
+      Player[P] := PlaylistMedley.Stats[CurrentRound].Player[P];
   end;
 
   ResetScores;
 end;
 
+//TODO: adapt for players 7 to 12
 procedure TScreenScore.LoadSwapTextures;
   var
     P, I: integer;
@@ -561,7 +561,7 @@ procedure TScreenScore.LoadSwapTextures;
     ThemeStatic: TThemeStatic;
 begin
   { we only need to load swapping textures if in dualscreen mode }
-  if Screens = 3 then
+  if Screens = 2 then
   begin
     { load swapping textures for custom statics }
     for P := low(PlayerStatic) to High(PlayerStatic) do
@@ -609,7 +609,7 @@ begin
           LoadColor(R, G, B, Color);
 
           with Theme.Score.PlayerStatic[P, I] do
-            PlayerStaticTextures[P, I, 2].Tex := Texture.GetTexture(Skin.GetTextureFileName(Tex), Typ, RGBFloatToInt(R, G, B));
+            PlayerStaticTextures[P, I, 2].Tex := Texture.LoadTexture(Skin.GetTextureFileName(Tex), Typ, RGBFloatToInt(R, G, B));
 
           PlayerStaticTextures[P, I, 2].Tex.X := Statics[PlayerStatic[P, I]].Texture.X;
           PlayerStaticTextures[P, I, 2].Tex.Y := Statics[PlayerStatic[P, I]].Texture.Y;
@@ -677,7 +677,7 @@ begin
           LoadColor(R, G, B, Color);
 
           with ThemeStatic do
-            PlayerBoxTextures[P, I, 2].Tex := Texture.GetTexture(Skin.GetTextureFileName(Tex), Typ, RGBFloatToInt(R, G, B));
+            PlayerBoxTextures[P, I, 2].Tex := Texture.LoadTexture(Skin.GetTextureFileName(Tex), Typ, RGBFloatToInt(R, G, B));
 
             PlayerBoxTextures[P, I, 2].Tex.X := Statics[StaticNum].Texture.X;
             PlayerBoxTextures[P, I, 2].Tex.Y := Statics[StaticNum].Texture.Y;
@@ -689,6 +689,7 @@ begin
   end;
 end;
 
+//TODO: adapt for players 7 to 12
 procedure TScreenScore.SwapToScreen(Screen: integer);
 var
   P, I, J, Max: integer;
@@ -699,6 +700,8 @@ begin
     1:    Max := 1;
     2, 4: Max := 2;
     3, 6: Max := 3;
+    8:    Max := 4;
+    12:   Max := 6;
   else
     Max := 0; //this should never happen
   end;
@@ -709,7 +712,7 @@ begin
     Screen := 1;
 
   { set correct box textures }
-  if (Screens = 3) then
+  if (Screens = 2) then
   begin
 
     for I:= 0 to Max - 1 do
@@ -789,6 +792,14 @@ begin
         Text[TextTotalScore[I + 1 + Max]].ColG := Col.G;
         Text[TextTotalScore[I + 1 + Max]].ColB := Col.B;
       end;
+      if((PlayersPlay > Max) and (Screen = 2)) then
+      begin
+        Statics[AvatarStaticRef[PlayersPlay-Max+I+1]].Visible:=true;
+      end
+      else if((PlayersPlay > Max) and (Screen = 1)) then
+      begin
+        Statics[AvatarStaticRef[PlayersPlay-Max+I+1]].Visible:=false;
+      end;
     end;
 
     { to keep it simple we just swap all statics, not just the shown ones }
@@ -828,7 +839,7 @@ begin
 
   TextArtistTitle := AddText(Theme.Score.TextArtistTitle);
 
-  for Player := 1 to 6 do
+  for Player := 1 to UIni.IMaxPlayerCount do
   begin
     SetLength(PlayerStatic[Player], Length(Theme.Score.PlayerStatic[Player]));
     SetLength(PlayerTexts[Player],  Length(Theme.Score.PlayerTexts[Player]));
@@ -866,6 +877,10 @@ begin
 
     //## the bars that visualize the score ##
 
+    //rating pictures that show a picture according to your rate
+    for I := 0 to 7 do
+      Tex_Score_Ratings[I] := UTexture.Texture.LoadTexture('Rating_'+IntToStr(I), TEXTURE_TYPE_TRANSPARENT);
+
     //NoteBar ScoreBar
     LoadColor(R, G, B, 'P' + IntToStr(Player) + 'Dark');
     Col2 := $10000 * Round(R*255) + $100 * Round(G*255) + Round(B*255);
@@ -895,6 +910,7 @@ begin
     aPlayerScoreScreenTextures[Player].Score_NoteBarRound_Lightest := Tex_Score_NoteBarRound_Lightest[Player];
   end;
 
+  //TODO: adapt for players 7 to 12
   // avatars
   case PlayersPlay of
     1: ArrayStartModifier := 0;
@@ -918,17 +934,30 @@ begin
 
   for I := 1 to PlayersPlay do
   begin
-    AvatarStatic[I + ArrayStartModifier] := AddStatic(Theme.Score.AvatarStatic[I + ArrayStartModifier]);
-    Statics[AvatarStatic[I + ArrayStartModifier]].Texture := AvatarPlayerTextures[I];
-
-    Statics[AvatarStatic[I + ArrayStartModifier]].Texture.X := Theme.Score.AvatarStatic[I + ArrayStartModifier].X;
-    Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Y := Theme.Score.AvatarStatic[I + ArrayStartModifier].Y;
-    Statics[AvatarStatic[I + ArrayStartModifier]].Texture.H := Theme.Score.AvatarStatic[I + ArrayStartModifier].H;
-    Statics[AvatarStatic[I + ArrayStartModifier]].Texture.W := Theme.Score.AvatarStatic[I + ArrayStartModifier].W;
-    Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Z := Theme.Score.AvatarStatic[I + ArrayStartModifier].Z;
-    Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Alpha := Theme.Score.AvatarStatic[I + ArrayStartModifier].Alpha;
-
+    if((Screens = 2) and (PlayersPlay > 3) and (I > Trunc(PlayersPlay/2))) then
+    begin
+      AvatarStatic[I + ArrayStartModifier] := AddStatic(Theme.Score.AvatarStatic[I-Trunc(PlayersPlay/2) + ArrayStartModifier]);
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture := AvatarPlayerTextures[I];
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.X := Theme.Score.AvatarStatic[I-Trunc(PlayersPlay/2) + ArrayStartModifier].X;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Y := Theme.Score.AvatarStatic[I-Trunc(PlayersPlay/2) + ArrayStartModifier].Y;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.H := Theme.Score.AvatarStatic[I-Trunc(PlayersPlay/2) + ArrayStartModifier].H;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.W := Theme.Score.AvatarStatic[I-Trunc(PlayersPlay/2) + ArrayStartModifier].W;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Z := Theme.Score.AvatarStatic[I-Trunc(PlayersPlay/2) + ArrayStartModifier].Z;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Alpha := Theme.Score.AvatarStatic[I-Trunc(PlayersPlay/2) + ArrayStartModifier].Alpha;
+    end
+    else
+    begin
+      AvatarStatic[I + ArrayStartModifier] := AddStatic(Theme.Score.AvatarStatic[I + ArrayStartModifier]);
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture := AvatarPlayerTextures[I];
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.X := Theme.Score.AvatarStatic[I + ArrayStartModifier].X;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Y := Theme.Score.AvatarStatic[I + ArrayStartModifier].Y;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.H := Theme.Score.AvatarStatic[I + ArrayStartModifier].H;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.W := Theme.Score.AvatarStatic[I + ArrayStartModifier].W;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Z := Theme.Score.AvatarStatic[I + ArrayStartModifier].Z;
+      Statics[AvatarStatic[I + ArrayStartModifier]].Texture.Alpha := Theme.Score.AvatarStatic[I + ArrayStartModifier].Alpha;
+    end;
     Statics[AvatarStatic[I + ArrayStartModifier]].Visible := true;
+    AvatarStaticRef[I]:=AvatarStatic[I + ArrayStartModifier];
   end;
 
   StaticNavigate := AddStatic(Theme.Score.StaticNavigate);
@@ -937,12 +966,14 @@ begin
   if (PlayersPlay <= 3) or (Screens = 2) then
     LoadSwapTextures;
 
+  //TODO: adapt for players 4 to 12
   //Send Buttons
   for I := 1 to 3 do
     ButtonSend[I] := AddButton(Theme.Score.ButtonSend[I]);
 
 end;
 
+//TODO: adapt for players 7 to 12
 procedure TScreenScore.MapPlayersToPosition;
   var
     ArrayStartModifier: integer;
@@ -1034,7 +1065,7 @@ procedure TScreenScore.DrawPlayerBars;
 begin
   for I := 0 to PlayersPlay - 1 do
   begin
-    if (PlayerPositionMap[I].Position > 0) then //and ((ScreenAct = PlayerPositionMap[I].Screen) or (PlayerPositionMap[I].BothScreens)) then
+    if (PlayerPositionMap[I].Position > 0) and ((ScreenAct = PlayerPositionMap[I].Screen) or (PlayerPositionMap[I].BothScreens)) then
     begin
       if (BarScore_EaseOut_Step >= (EaseOut_MaxSteps * 10)) then
       begin
@@ -1061,9 +1092,14 @@ procedure TScreenScore.OnShow;
 var
   P: integer;  // player
   I: integer;
-  V: array[1..6] of boolean; // visibility array
+  V: array[1..UIni.IMaxPlayerCount] of boolean; // visibility array
   ArrayStartModifier: integer;
 begin
+  if not Assigned(UGraphic.ScreenPopupSendScore) then //load the screens only the first time
+  begin
+    UGraphic.ScreenPopupSendScore := TScreenPopupSendScore.Create();
+    UGraphic.ScreenTop5 := TScreenTop5.Create();
+  end;
 
   FinishScreenDraw := false;
 
@@ -1074,11 +1110,13 @@ begin
 
   inherited;
 
-  ActualRound := 0;
+  // intially show total score
+  CurrentRound := Length(PlaylistMedley.Stats)-1;
   if (ScreenSong.Mode = smMedley) then
   begin
+    StartPreview;
     for P := 0 to PlayersPlay - 1 do
-      Player[P] := PlaylistMedley.Stats[ActualRound].Player[P];
+      Player[P] := PlaylistMedley.Stats[CurrentRound].Player[P];
 
     Statics[StaticNavigate].Visible := true;
     Text[TextNavigate].Visible := true;
@@ -1094,6 +1132,7 @@ begin
   Text[TextTitle].Text       := CurrentSong.Title;
   Text[TextArtistTitle].Text := CurrentSong.Artist + ' - ' + CurrentSong.Title;
 
+  //TODO: adapt for players 7 to 12
   // set visibility
   case PlayersPlay of
     1:  begin
@@ -1146,7 +1185,7 @@ begin
         end;
   end;
 
-  for P := 1 to 6 do
+  for P := 1 to UIni.IMaxPlayerCount do
   begin
     Text[TextName[P]].Visible               := V[P];
     Text[TextScore[P]].Visible              := V[P];
@@ -1236,7 +1275,7 @@ begin
     TextGolden_ActualValue[P] := 0;
   end;
 
-  for P := 1 to 6 do
+  for P := 1 to UIni.IMaxPlayerCount do
   begin
     // We set alpha to 0 , so we can nicely blend them in when we need them
     Text[TextScore[P]].Alpha                   := 0;
@@ -1315,10 +1354,7 @@ begin
     BarTime := 0;
 
   // swap static textures to current screen ones
-  try
-    SwapToScreen(ScreenAct);
-  except
-  end;
+  SwapToScreen(ScreenAct);
 
   //Draw the Background
   DrawBG;
@@ -1329,8 +1365,7 @@ begin
   if (ShowFinish) then
     DrawPlayerBars;
 
-  //Draw Theme Objects
-  DrawFG;
+
 
 (*
     //todo: i need a clever method to draw statics with their z value
@@ -1342,11 +1377,12 @@ begin
 
   // we have to swap the themeobjects values on every draw
   // to support dual screen
-  for PlayerCounter := 1 to PlayersPlay do
+  for PlayerCounter := 1 to PlayersPlay do       //TODO: adapt for players 7 to 12
   begin
     FillPlayerItems(PlayerCounter);
   end;
-
+   //Draw Theme Objects
+  DrawFG;
   Result := true;
 end;
 
@@ -1478,7 +1514,7 @@ begin
     glBindTexture(GL_TEXTURE_2D, Tex_Score_Ratings[Rating].TexNum);
 
     glColor3f(1.0, 1.0, 1.0);
-      
+
     glEnable(GL_TEXTURE_2D);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
@@ -1762,18 +1798,24 @@ var
   select:   integer;
   changed:  boolean;
 begin
-  //When Music Preview is avtivated -> then Change Music
+  //When Music Preview is activated -> then change music
   if (Ini.PreviewVolume <> 0) then
   begin
     changed := false;
     if (ScreenSong.Mode = smMedley) then
     begin
-      if (ActualRound < Length(PlaylistMedley.Stats) - 1) and (ScreenSong.SongIndex <> PlaylistMedley.Song[ActualRound])  then
+      if (CurrentRound < Length(PlaylistMedley.Stats) - 1) and (ScreenSong.SongIndex <> PlaylistMedley.Song[CurrentRound])  then
       begin
-        select := PlaylistMedley.Song[ActualRound];
+        select := PlaylistMedley.Song[CurrentRound];
         changed := true;
         ScreenSong.SongIndex := select;
       end;
+      if (CurrentRound = Length(PlaylistMedley.Stats) - 1) then // Total Score --> play last song in medley
+      begin
+        select := PlaylistMedley.Song[CurrentRound-1];
+        changed := true;
+        ScreenSong.SongIndex := select;
+      end
     end else
     begin
       select := ScreenSong.Interaction;
@@ -1825,9 +1867,9 @@ begin
   {
   if (ScreenSong.Mode = smMedley) then
   begin
-    if (ActualRound<Length(PlaylistMedley.Stats)-1) and (Voice <> ActualRound)  then
+    if (CurrentRound<Length(PlaylistMedley.Stats)-1) and (Voice <> CurrentRound)  then
     begin
-      Voice := ActualRound;
+      Voice := CurrentRound;
       changed := true;
       SetLength(files, PlaylistMedley.NumPlayer);
       for I := 0 to Length(files) - 1 do

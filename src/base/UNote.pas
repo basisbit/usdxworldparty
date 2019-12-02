@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL$
- * $Id$
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UNote;
@@ -42,8 +39,9 @@ uses
   UIni,
   ULog,
   ULyrics,
+  UMusic,
   URecord,
-  UScreenSing,
+  UScreenSingController,
   UScreenJukebox,
   USong,
   UTime;
@@ -51,12 +49,13 @@ uses
 type
   PPLayerNote = ^TPlayerNote;
   TPlayerNote = record
-    Start:   integer;
-    Length:  integer;
-    Detect:  real;    // accurate place, detected in the note
-    Tone:    real;
-    Perfect: boolean; // true if the note matches the original one, light the star
-    Hit:     boolean; // true if the note hits the line
+    Start:    integer;
+    Length:   integer;
+    Detect:   real;    // accurate place, detected in the note
+    Tone:     real;
+    Perfect:  boolean; // true if the note matches the original one, light the star
+    Hit:      boolean; // true if the note hits the line
+    NoteType: TNoteType;
   end;
 
   PPLayer = ^TPlayer;
@@ -128,11 +127,11 @@ const
   MAX_SONG_SCORE = 10000;     // max. achievable points per song
   MAX_SONG_LINE_BONUS = 1000; // max. achievable line bonus per song
 
-procedure Sing(Screen: TScreenSing);
-procedure NewSentence(CP: integer; Screen: TScreenSing);
-procedure NewBeatClick(Screen: TScreenSing);  // executed when on then new beat for click
-procedure NewBeatDetect(Screen: TScreenSing); // executed when on then new beat for detection
-procedure NewNote(CP: integer; Screen: TScreenSing);       // detect note
+procedure Sing(Screen: TScreenSingController);
+procedure NewSentence(CP: integer; Screen: TScreenSingController);
+procedure NewBeatClick(Screen: TScreenSingController);  // executed when on then new beat for click
+procedure NewBeatDetect(Screen: TScreenSingController); // executed when on then new beat for detection
+procedure NewNote(CP: integer; Screen: TScreenSingController);       // detect note
 function  GetMidBeat(Time: real): real;
 function  GetTimeFromBeat(Beat: integer; SelfSong: TSong = nil): real;
 
@@ -147,13 +146,11 @@ uses
   UCommandLine,
   UCommon,
   UConfig,
-  UCovers,
   UDataBase,
   UGraphic,
   UGraphicClasses,
   UJoystick,
   ULanguage,
-  UMusic,
   UParty,
   UPathUtils,
   UPlatform,
@@ -172,71 +169,9 @@ begin
   Result := BPM * msTime / 60;
 end;
 
-procedure GetMidBeatSub(BPMNum: integer; var Time: real; var CurBeat: real);
-var
-  NewTime: real;
-begin
-  if High(CurrentSong.BPM) = BPMNum then
-  begin
-    // last BPM
-    CurBeat := CurrentSong.BPM[BPMNum].StartBeat + GetBeats(CurrentSong.BPM[BPMNum].BPM, Time);
-    Time := 0;
-  end
-  else
-  begin
-    // not last BPM
-    // count how much time is it for start of the new BPM and store it in NewTime
-    NewTime := GetTimeForBeats(CurrentSong.BPM[BPMNum].BPM, CurrentSong.BPM[BPMNum+1].StartBeat - CurrentSong.BPM[BPMNum].StartBeat);
-
-    // compare it to remaining time
-    if (Time - NewTime) > 0 then
-    begin
-      // there is still remaining time
-      CurBeat := CurrentSong.BPM[BPMNum].StartBeat;
-      Time := Time - NewTime;
-    end
-    else
-    begin
-      // there is no remaining time
-      CurBeat := CurrentSong.BPM[BPMNum].StartBeat + GetBeats(CurrentSong.BPM[BPMNum].BPM, Time);
-      Time := 0;
-    end; // if
-  end; // if
-end;
-
 function GetMidBeat(Time: real): real;
-var
-  CurBeat: real;
-  CurBPM:  integer;
 begin
-  try
-  // static BPM
-  if Length(CurrentSong.BPM) = 1 then
-  begin
-    Result := Time * CurrentSong.BPM[0].BPM / 60;
-  end
-  // variable BPM
-  else if Length(CurrentSong.BPM) > 1 then
-  begin
-    CurBeat := 0;
-    CurBPM := 0;
-    while (Time > 0) do
-    begin
-      GetMidBeatSub(CurBPM, Time, CurBeat);
-      Inc(CurBPM);
-    end;
-
-    Result := CurBeat;
-  end
-  // invalid BPM
-  else
-  begin
-    Result := 0;
-  end;
-  except
-    on E : Exception do
-    Result :=0;
-  end;
+  Result := Time * CurrentSong.BPM / 60;
 end;
 
 function GetTimeFromBeat(Beat: integer; SelfSong: TSong = nil): real;
@@ -250,55 +185,10 @@ begin
   else
     Song := CurrentSong;
 
-  Result := 0;
-
-  // static BPM
-  if Length(Song.BPM) = 1 then
-  begin
-    Result := Song.GAP / 1000 + Beat * 60 / Song.BPM[0].BPM;
-  end
-  // variable BPM
-  else if Length(Song.BPM) > 1 then
-  begin
-    Result := Song.GAP / 1000;
-    CurBPM := 0;
-    while (CurBPM <= High(Song.BPM)) and
-          (Beat > Song.BPM[CurBPM].StartBeat) do
-    begin
-      if (CurBPM < High(Song.BPM)) and
-         (Beat >= Song.BPM[CurBPM+1].StartBeat) then
-      begin
-        // full range
-        Result := Result + (60 / Song.BPM[CurBPM].BPM) *
-                           (Song.BPM[CurBPM+1].StartBeat - Song.BPM[CurBPM].StartBeat);
-      end;
-
-      if (CurBPM = High(Song.BPM)) or
-         (Beat < Song.BPM[CurBPM+1].StartBeat) then
-      begin
-        // in the middle
-        Result := Result + (60 / Song.BPM[CurBPM].BPM) *
-                           (Beat - Song.BPM[CurBPM].StartBeat);
-      end;
-      Inc(CurBPM);
-    end;
-
-    {
-    while (Time > 0) do
-    begin
-      GetMidBeatSub(CurBPM, Time, CurBeat);
-      Inc(CurBPM);
-    end;
-    }
-  end
-  // invalid BPM
-  else
-  begin
-    Result := 0;
-  end;
+  Result := Song.GAP / 1000 + Beat * 60 / Song.BPM;
 end;
 
-procedure Sing(Screen: TScreenSing);
+procedure Sing(Screen: TScreenSingController);
 var
   Count:   integer;
   CountGr: integer;
@@ -312,23 +202,23 @@ begin
     PetGr := 1;
 
   // sentences routines
-  for CountGr := 0 to PetGr do //High(Lines)
+  for CountGr := 0 to PetGr do //High(CurrentSong.Lines)
   begin;
     CP := CountGr;
 
     // old parts
-    LyricsState.OldLine := Lines[CP].Current;
+    LyricsState.OldLine := CurrentSong.Lines[CP].Current;
 
     // choose current parts
-    for Count := 0 to Lines[CP].High do
+    for Count := 0 to CurrentSong.Lines[CP].High do
     begin
-      if LyricsState.CurrentBeat >= Lines[CP].Line[Count].Start then
-        Lines[CP].Current := Count;
+      if LyricsState.CurrentBeat >= CurrentSong.Lines[CP].Line[Count].Start then
+        CurrentSong.Lines[CP].Current := Count;
     end;
 
     // clean player note if there is a new line
     // (optimization on halfbeat time)
-    if Lines[CP].Current <> LyricsState.OldLine then
+    if CurrentSong.Lines[CP].Current <> LyricsState.OldLine then
       NewSentence(CP, Screen);
 
   end; // for CountGr
@@ -351,25 +241,25 @@ begin
   LyricsState.UpdateBeats();
 
   // sentences routines
-  for CountGr := 0 to 0 do //High(Lines)
+  for CountGr := 0 to 0 do //High(CurrentSong.Lines)
   begin;
     CP := CountGr;
     // old parts
-    LyricsState.OldLine := Lines[CP].Current;
+    LyricsState.OldLine := CurrentSong.Lines[CP].Current;
 
     // choose current parts
-    for Count := 0 to Lines[CP].High do
+    for Count := 0 to CurrentSong.Lines[CP].High do
     begin
-      if LyricsState.CurrentBeat >= Lines[CP].Line[Count].Start then
-        Lines[CP].Current := Count;
+      if LyricsState.CurrentBeat >= CurrentSong.Lines[CP].Line[Count].Start then
+        CurrentSong.Lines[CP].Current := Count;
     end;
   end; // for CountGr
 
   // on sentence change...
-  Screen.onSentenceChange(Lines[0].Current);
+  Screen.onSentenceChange(CurrentSong.Lines[0].Current);
 end;
 
-procedure NewSentence(CP: integer; Screen: TScreenSing);
+procedure NewSentence(CP: integer; Screen: TScreenSingController);
 var
   I: integer;
 begin
@@ -384,7 +274,7 @@ begin
     end;
   end;
 
-  Screen.onSentenceChange(CP, Lines[CP].Current)
+  Screen.onSentenceChange(CP, CurrentSong.Lines[CP].Current)
 end;
 
 procedure NewBeatClick;
@@ -392,23 +282,19 @@ var
   Count: integer;
 begin
   // beat click
-
   if not (CurrentSong.isDuet) or (PlayersPlay = 1) then
   begin
-    if ((Ini.BeatClick = 1) and
-        ((LyricsState.CurrentBeatC + Lines[0].Resolution + Lines[0].NotesGAP) mod Lines[0].Resolution = 0)) then
+    if (Ini.BeatClick = 1) and ((LyricsState.CurrentBeatC + 4) mod 4 = 0) then //FIXME after remove resolution and notesgap use 4 as default...
     begin
-      AudioPlayback.PlaySound(SoundLib.Click);
     end;
 
-    for Count := 0 to Lines[0].Line[Lines[0].Current].HighNote do
+    for Count := 0 to CurrentSong.Lines[0].Line[CurrentSong.Lines[0].Current].HighNote do
     begin
       //basisbit todo
-      if (Lines[0].Line[Lines[0].Current].Note[Count].Start = LyricsState.CurrentBeatC) then
+      if (CurrentSong.Lines[0].Line[CurrentSong.Lines[0].Current].Note[Count].Start = LyricsState.CurrentBeatC) then
       begin
         // click assist
         if Ini.ClickAssist = 1 then
-          AudioPlayback.PlaySound(SoundLib.Click);
 
         // drum machine
         (*
@@ -423,7 +309,7 @@ begin
   end;
 end;
 
-procedure NewBeatDetect(Screen: TScreenSing);
+procedure NewBeatDetect(Screen: TScreenSingController);
   var
     MaxCP, CP, SentenceEnd: integer;
     I, J: cardinal;
@@ -451,9 +337,9 @@ begin
 
       NewNote(CP, Screen);
 
-      for I := 0 to Lines[CP].High do
+      for I := 0 to CurrentSong.Lines[CP].High do
       begin
-        with Lines[CP].Line[I] do
+        with CurrentSong.Lines[CP].Line[I] do
         begin
           if (HighNote >= 0) then
           begin
@@ -468,7 +354,7 @@ begin
   end;
 end;
 
-procedure NewNote(CP: integer; Screen: TScreenSing);
+procedure NewNote(CP: integer; Screen: TScreenSingController);
 var
   LineFragmentIndex:   integer;
   CurrentLineFragment: PLineFragment;
@@ -489,19 +375,20 @@ var
   NoteHit:             boolean;
   MaxSongPoints:       integer; // max. points for the song (without line bonus)
   CurNotePoints:       real;    // Points for the cur. Note (PointsperNote * ScoreFactor[CurNote])
+  CurrentNoteType:     TNoteType;
 begin
   ActualTone := 0;
   NoteHit := false;
 
   // TODO: add duet mode support
-  // use Lines[LineSetIndex] with LineSetIndex depending on the current player
+  // use CurrentSong.Lines[LineSetIndex] with LineSetIndex depending on the current player
 
   // count min and max sentence range for checking
   // (detection is delayed to the notes we see on the screen)
-  SentenceMin := Lines[CP].Current-1;
+  SentenceMin := CurrentSong.Lines[CP].Current-1;
   if (SentenceMin < 0) then
     SentenceMin := 0;
-  SentenceMax := Lines[CP].Current;
+  SentenceMax := CurrentSong.Lines[CP].Current;
 
   for ActualBeat := LyricsState.OldBeatD+1 to LyricsState.CurrentBeatD do
   begin
@@ -515,7 +402,7 @@ begin
         SentenceDetected := SentenceMin;
         for SentenceIndex := SentenceMin to SentenceMax do
         begin
-          Line := @Lines[CP].Line[SentenceIndex];
+          Line := @CurrentSong.Lines[CP].Line[SentenceIndex];
           for LineFragmentIndex := 0 to Line.HighNote do
           begin
             CurrentLineFragment := @Line.Note[LineFragmentIndex];
@@ -541,7 +428,7 @@ begin
         CurrentSound := AudioInputProcessor.Sound[PlayerIndex];
 
         // at the beginning of the song there is no previous note
-        if (Length(CurrentPlayer.Note) > 0) then
+        if (Length(CurrentPlayer.Note) > 0) and (CurrentPlayer.HighNote > -1) then
           LastPlayerNote := @CurrentPlayer.Note[CurrentPlayer.HighNote]
         else
           LastPlayerNote := nil;
@@ -556,7 +443,8 @@ begin
         // add note if possible
         if (CurrentSound.ToneValid and NoteAvailable) then
         begin
-          Line := @Lines[CP].Line[SentenceDetected];
+          CurrentNoteType := ntNormal;
+          Line := @CurrentSong.Lines[CP].Line[SentenceDetected];
           // process until last note
           for LineFragmentIndex := 0 to Line.HighNote do
           begin
@@ -564,6 +452,8 @@ begin
             if (CurrentLineFragment.Start <= ActualBeat) and
               (CurrentLineFragment.Start + CurrentLineFragment.Length > ActualBeat) then
             begin
+              // set the current note type
+              CurrentNoteType := CurrentLineFragment.NoteType;
               // compare notes (from song-file and from player)
 
               // move players tone to proper octave
@@ -582,7 +472,7 @@ begin
                 Range := 2 - Ini.Difficulty;
 
               // check if the player hit the correct tone within the tolerated range
-              if (Abs(CurrentLineFragment.Tone - CurrentSound.Tone) <= Range) then
+              if (Abs(CurrentLineFragment.Tone - CurrentSound.Tone) <= Range) or (CurrentLineFragment.NoteType = ntRap) or (CurrentLineFragment.NoteType = ntRapGolden) then
               begin
                 // adjust the players tone to the correct one
                 // TODO: do we need to do this?
@@ -604,11 +494,13 @@ begin
                 // gets for a hit of one beat of a normal note
                 // CurNotePoints is the amount of points that is meassured
                 // for a hit of the note per full beat
-                CurNotePoints := (MaxSongPoints / Lines[CP].ScoreValue) * ScoreFactor[CurrentLineFragment.NoteType];
+                CurNotePoints := (MaxSongPoints / CurrentSong.Lines[CP].ScoreValue) * ScoreFactor[CurrentLineFragment.NoteType];
 
                 case CurrentLineFragment.NoteType of
-                  ntNormal: CurrentPlayer.Score       := CurrentPlayer.Score       + CurNotePoints;
-                  ntGolden: CurrentPlayer.ScoreGolden := CurrentPlayer.ScoreGolden + CurNotePoints;
+                  ntNormal:    CurrentPlayer.Score       := CurrentPlayer.Score       + CurNotePoints;
+                  ntGolden:    CurrentPlayer.ScoreGolden := CurrentPlayer.ScoreGolden + CurNotePoints;
+                  ntRap:       CurrentPlayer.Score       := CurrentPlayer.Score       + CurNotePoints;
+                  ntRapGolden: CurrentPlayer.ScoreGolden := CurrentPlayer.ScoreGolden + CurNotePoints;
                 end;
 
                 // a problem if we use floor instead of round is that a score of
@@ -671,11 +563,12 @@ begin
               LastPlayerNote := @CurrentPlayer.Note[CurrentPlayer.HighNote];
               with LastPlayerNote^ do
               begin
-                Start  := ActualBeat;
-                Length := 1;
-                Tone   := ActualTone; // Tone || ToneAbs
+                Start    := ActualBeat;
+                Length   := 1;
+                Tone     := ActualTone; // Tone || ToneAbs
                 //Detect := LyricsState.MidBeat; // Not used!
-                Hit    := NoteHit; // half note patch
+                Hit      := NoteHit; // half note patch
+                NoteType := CurrentNoteType;
               end;
             end
             else

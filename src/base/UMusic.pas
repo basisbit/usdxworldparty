@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/base/UMusic.pas $
- * $Id: UMusic.pas 3103 2014-11-22 23:21:19Z k-m_schindler $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UMusic;
@@ -42,7 +39,7 @@ uses
   UWebcam;
 
 type
-  TNoteType = (ntFreestyle, ntNormal, ntGolden);
+  TNoteType = (ntFreestyle, ntNormal, ntGolden, ntRap, ntRapGolden);
 
   TPos = record
     CP:   integer;
@@ -77,7 +74,7 @@ const
   // 0 means this notetype is not rated at all
   // 2 means a hit of this notetype will be rated w/ twice as much
   // points as a hit of a notetype w/ ScoreFactor 1
-  ScoreFactor:         array[TNoteType] of integer = (0, 1, 2);
+  ScoreFactor:         array[TNoteType] of integer = (0, 1, 2, 1, 2);
 
 type
   (**
@@ -96,6 +93,13 @@ type
 
     IsMedley:   boolean;     //just for editor
     IsStartPreview: boolean; //just for editor
+
+    private
+    function GetEnd:integer;
+
+    public
+    property End_:integer read GetEnd;
+
 
   end;
 
@@ -116,6 +120,22 @@ type
     TotalNotes: integer; // value of all notes in the line
     LastLine:   boolean;
     Note:       array of TLineFragment;
+
+    private
+    function GetLength(): integer;
+
+    public
+    { Returns whether the line has a valid length. }
+    function HasLength(): boolean; overload;
+    { Returns whether the line has a valid length and passes length. }
+    function HasLength(out Len: Integer): boolean; overload;
+    { Returns whether the line has a valid length and passes length. Output converted to Real }
+    function HasLength(out Len: real): boolean; overload;
+    { Returns whether the line has a valid length and passes length. Output converted to Double }
+    function HasLength(out Len: double): boolean; overload;
+
+    property Length_: integer read GetLength;
+
   end;
 
   (**
@@ -127,8 +147,6 @@ type
     Current:    integer;  // for drawing of current line
     High:       integer;  // = High(Line)!
     Number:     integer;
-    Resolution: integer;
-    NotesGAP:   integer;
     ScoreValue: integer;
     Line:       array of TLine;
   end;
@@ -167,9 +185,9 @@ const
     2, 2,     // asfU16LSB, asfS16LSB
     2, 2,     // asfU16MSB, asfS16MSB
     2, 2,     // asfU16,    asfS16
-    3,        // asfS24
     4,        // asfS32
-    4         // asfFloat
+    4,        // asfFloat
+    8         // asfDouble
   );
 
 const
@@ -219,6 +237,23 @@ type
   TVoiceRemoval = class(TSoundEffect)
     public
       procedure Callback(Buffer: PByteArray; BufSize: integer); override;
+  end;
+
+  TSoundFX = class
+    public
+      EngineData: Pointer; // can be used for engine-specific data
+      procedure Init(); virtual; abstract;
+      procedure Removed(); virtual; abstract;
+
+      class function CanEnable: boolean; virtual; abstract; static;
+
+      function GetType: DWORD; virtual; abstract;
+      function GetPriority: LongInt; virtual; abstract;
+      function GetName: string; virtual; abstract;
+
+  end;
+
+  TReplayGain = class(TSoundFX)
   end;
 
 type
@@ -313,6 +348,9 @@ type
       procedure AddSoundEffect(Effect: TSoundEffect);    virtual; abstract;
       procedure RemoveSoundEffect(Effect: TSoundEffect); virtual; abstract;
 
+      procedure AddSoundFX(FX: TSoundFX);    virtual; abstract;
+      procedure RemoveSoundFX(FX: TSoundFX); virtual; abstract;
+
       procedure SetSyncSource(SyncSource: TSyncSource);
       function GetSourceStream(): TAudioSourceStream;
 
@@ -371,40 +409,40 @@ type
 
       procedure SetScreen(Screen: integer);
       function GetScreen(): integer;
-      
+
       procedure SetScreenPosition(X, Y: double; Z: double = 0.0);
       procedure GetScreenPosition(var X, Y, Z: double);
 
       procedure  SetWidth(Width: double);
        function GetWidth(): double;
-      
+
       procedure  SetHeight(Height: double);
        function GetHeight(): double;
-      
+
       {**
        * Sub-image of the video frame to draw.
        * This can be used for zooming or similar purposes.
        *}
       procedure SetFrameRange(Range: TRectCoords);
       function GetFrameRange(): TRectCoords;
-      
+
       function GetFrameAspect(): real;
-      
+
       procedure SetAspectCorrection(AspectCorrection: TAspectCorrection);
       function GetAspectCorrection(): TAspectCorrection;
-      
+
 
       procedure SetAlpha(Alpha: double);
       function GetAlpha(): double;
-      
+
       procedure SetReflectionSpacing(Spacing: double);
       function GetReflectionSpacing(): double;
 
       procedure GetFrame(Time: Extended);
       procedure Draw();
       procedure DrawReflection();
-       
-       
+
+
       property Screen: integer read GetScreen;
       property Width: double read GetWidth write SetWidth;
       property Height: double read GetHeight write SetHeight;
@@ -549,25 +587,14 @@ type
 const
   SOUNDID_START    = 0;
   SOUNDID_BACK     = 1;
-  SOUNDID_SWOOSH   = 2;
-  SOUNDID_CHANGE   = 3;
-  SOUNDID_OPTION   = 4;
-  SOUNDID_CLICK    = 5;
+  SOUNDID_OPTION   = 2;
   LAST_SOUNDID = SOUNDID_CLICK;
 
   BaseSoundFilenames: array[0..LAST_SOUNDID] of IPath = (
-    '%SOUNDPATH%/Common start.mp3',                 // Start
-    '%SOUNDPATH%/Common back.mp3',                  // Back
-    '%SOUNDPATH%/menu swoosh.mp3',                  // Swoosh
-    '%SOUNDPATH%/select music change music 50.mp3', // Change
-    '%SOUNDPATH%/option change col.mp3',            // Option
-    '%SOUNDPATH%/rimshot022b.mp3'                   // Click
-    {
-    '%SOUNDPATH%/bassdrumhard076b.mp3',             // Drum (unused)
-    '%SOUNDPATH%/hihatclosed068b.mp3',              // Hihat (unused)
-    '%SOUNDPATH%/claps050b.mp3',                    // Clap (unused)
-    '%SOUNDPATH%/Shuffle.mp3'                       // Shuffle (unused)
-    }
+    '%SOUNDPATH%/forward sound.mp3',                 // Start
+    '%SOUNDPATH%/back sound.mp3', 	             // Back
+    '%SOUNDPATH%/option sound col.mp3',	             // Option
+
   );
 *)
 
@@ -581,11 +608,7 @@ type
       // and provide IDs instead.
       Start:   TAudioPlaybackStream;
       Back:    TAudioPlaybackStream;
-      Swoosh:  TAudioPlaybackStream;
-      Change:  TAudioPlaybackStream;
       Option:  TAudioPlaybackStream;
-      Click:   TAudioPlaybackStream;
-      Applause:TAudioPlaybackStream;
       BGMusic: TAudioPlaybackStream;
 
       constructor Create();
@@ -605,7 +628,6 @@ type
 
 var
   // TODO: JB --- THESE SHOULD NOT BE GLOBAL
-  Lines: array of TLines;
   LyricsState: TLyricsState;
   SoundLib: TSoundLibrary;
 
@@ -957,14 +979,9 @@ procedure TSoundLibrary.LoadSounds();
 begin
   UnloadSounds();
 
-  Start   := AudioPlayback.OpenSound(SoundPath.Append('Common start.mp3'));
-  Back    := AudioPlayback.OpenSound(SoundPath.Append('Common back.mp3'));
-  Swoosh  := AudioPlayback.OpenSound(SoundPath.Append('menu swoosh.mp3'));
-  Change  := AudioPlayback.OpenSound(SoundPath.Append('select music change music 50.mp3'));
-  Option  := AudioPlayback.OpenSound(SoundPath.Append('option change col.mp3'));
-  Click   := AudioPlayback.OpenSound(SoundPath.Append('rimshot022b.mp3'));
-  Applause:= AudioPlayback.OpenSound(SoundPath.Append('Applause.mp3'));
-
+  Start   := AudioPlayback.OpenSound(SoundPath.Append('forward sound.mp3'));
+  Back    := AudioPlayback.OpenSound(SoundPath.Append('back sound.mp3'));
+  Option  := AudioPlayback.OpenSound(SoundPath.Append('option sound.mp3'));
   BGMusic := AudioPlayback.OpenSound(SoundPath.Append('background track.mp3'));
 
   if (BGMusic <> nil) then
@@ -975,11 +992,7 @@ procedure TSoundLibrary.UnloadSounds();
 begin
   FreeAndNil(Start);
   FreeAndNil(Back);
-  FreeAndNil(Swoosh);
-  FreeAndNil(Change);
   FreeAndNil(Option);
-  FreeAndNil(Click);
-  FreeAndNil(Applause);
   FreeAndNil(BGMusic);
 end;
 
@@ -1105,9 +1118,7 @@ end;
 function TAudioPlaybackStream.Synchronize(BufferSize: integer; FormatInfo: TAudioFormatInfo): integer;
 var
   TimeDiff: double;
-  FrameDiff: double;
   FrameSkip: integer;
-  ReqFrames: integer;
   MasterClock: real;
   CurPosition: real;
 const
@@ -1258,5 +1269,48 @@ procedure TAudioVoiceStream.SetLoop(Enabled: boolean);
 begin
 end;
 
+{ TLineFragment }
+
+function TLineFragment.GetEnd(): integer;
+begin
+  Result := Start+Length;
+end;
+
+{ TLine }
+
+function TLine.HasLength(): boolean;
+var tempi: integer;
+begin
+  Result := HasLength(tempi);
+end;
+
+function TLine.HasLength(out Len: integer): boolean;
+begin
+  Result := false;
+  if Length(Note) >= 0 then
+  begin
+    Result := true;
+    Len := End_ - Note[0].Start;
+  end;
+end;
+
+function TLine.HasLength(out Len: real): boolean;
+var tempi: integer;
+begin
+  Result := HasLength(tempi);
+  Len := tempi;
+end;
+
+function TLine.HasLength(out Len: double): boolean;
+var tempi: integer;
+begin
+  Result := HasLength(tempi);
+  Len := tempi;
+end;
+
+function TLine.GetLength(): integer;
+begin
+  Result := ifthen(Length(Note) < 0, 0, End_ - Note[0].Start);
+end;
 
 end.

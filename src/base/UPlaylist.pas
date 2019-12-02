@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: svn://basisbit@svn.code.sf.net/p/ultrastardx/svn/trunk/src/base/UPlaylist.pas $
- * $Id: UPlaylist.pas 2199 2010-03-14 20:56:20Z brunzelchen $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UPlaylist;
@@ -99,6 +96,7 @@ type
 implementation
 
 uses
+  LazUTF8,
   SysUtils,
   USongs,
   ULog,
@@ -158,29 +156,13 @@ end;
 //LoadPlayList - Load a Playlist in the Array
 //----------
 function TPlayListManager.LoadPlayList(Index: Cardinal; const Filename: IPath): Boolean;
-
-  function FindSong(Artist, Title: UTF8String): Integer;
-  var I: Integer;
-  begin
-    Result := -1;
-
-    For I := low(CatSongs.Song) to high(CatSongs.Song) do
-    begin
-      if (CatSongs.Song[I].Title = Title) and (CatSongs.Song[I].Artist = Artist) then
-      begin
-        Result := I;
-        Break;
-      end;
-    end;
-  end;
-
 var
   TextStream: TTextFileStream;
   Line: UTF8String;
-  PosDelimiter: Integer;
   SongID: Integer;
   Len: Integer;
   FilenameAbs: IPath;
+  I: Integer;
 begin
   //Load File
   try
@@ -204,44 +186,40 @@ begin
   begin
     if (Length(Line) > 0) then
     begin
-      PosDelimiter := UTF8Pos(':', Line);
-      if (PosDelimiter <> 0) then
+      if not UUnicodeUtils.IsUTF8String(Line) then //conver to UTF88 if needed to avoid problem with ANSI upl files from Ultrastar Manager
+        Line := LazUTF8.WinCPToUTF8(Line);
+
+      //Comment or Name String
+      if UUnicodeUtils.UTF8StartsText('#name', Line) then //playlist name
       begin
-        //Comment or Name String
-        if (Line[1] = '#') then
+        PlayLists[Index].Name := Copy(Line, 7, Length(Line) - 5);
+        if PlayLists[Index].Name = '' then
+          PlayLists[Index].Name := FileName.SetExtension('').ToUTF8;
+      end
+      else if Pos(' : ', Line) > 0 then //song entry
+      begin
+        SongID := -1;
+        for I := low(CatSongs.Song) to high(CatSongs.Song) do
         begin
-          //Found Name Value
-          if (Uppercase(Trim(copy(Line, 2, PosDelimiter - 2))) = 'NAME') then
-            PlayLists[Index].Name := Trim(copy(Line, PosDelimiter + 1,Length(Line) - PosDelimiter))
-            
-        end
-        //Song Entry
-        else
-        begin
-          SongID := FindSong(Trim(copy(Line, 1, PosDelimiter - 1)), Trim(copy(Line, PosDelimiter + 1, Length(Line) - PosDelimiter)));
-          if (SongID <> -1) then
+          if CatSongs.Song[I].Artist + ' : ' + CatSongs.Song[I].Title = Line then
           begin
-            Len := Length(PlayLists[Index].Items);
-            SetLength(PlayLists[Index].Items, Len + 1);
-
-            PlayLists[Index].Items[Len].SongID := SongID;
-
-            PlayLists[Index].Items[Len].Artist := Trim(copy(Line, 1, PosDelimiter - 1));
-            PlayLists[Index].Items[Len].Title  := Trim(copy(Line, PosDelimiter + 1, Length(Line) - PosDelimiter));
-          end
-          else Log.LogError('Could not find Song in Playlist: ' + PlayLists[Index].Filename.ToNative + ', ' + Line);
+            SongID := I;
+            Break;
+          end;
         end;
+        if (SongID <> -1) then
+        begin
+          Len := Length(PlayLists[Index].Items);
+          SetLength(PlayLists[Index].Items, Len + 1);
+          PlayLists[Index].Items[Len].SongID := SongID;
+          PlayLists[Index].Items[Len].Artist := CatSongs.Song[SongID].Artist;
+          PlayLists[Index].Items[Len].Title := CatSongs.Song[SongID].Title;
+        end
+        else
+          Log.LogError('Could not find Song in Playlist: ' + PlayLists[Index].Filename.ToNative + ', ' + Line);
       end;
     end;
   end;
-
-  //If no special name is given, use Filename
-  if PlayLists[Index].Name = '' then
-  begin
-    PlayLists[Index].Name := FileName.SetExtension('').ToUTF8;
-  end;
-
-  //Finish (Close File)
   TextStream.Free;
 end;
 
@@ -336,7 +314,7 @@ var
 begin
   Result := Length(Playlists);
   SetLength(Playlists, Result + 1);
-  
+
   // Sort the Playlists - Insertion Sort
   while (Result > 0) and (CompareText(Playlists[Result - 1].Name, Name) >= 0) do
   begin
@@ -395,7 +373,6 @@ begin
   //-> Display Songs
   if (CatSongs.CatNumShow = -3) and (Index = CurPlaylist) then
   begin
-    ScreenSong.UnloadCover(ScreenSong.Interaction);
     ScreenSong.HideCatTL;
     CatSongs.SetFilter('', fltAll);
     ScreenSong.Interaction := 0;
@@ -484,7 +461,7 @@ var
   Len: Integer;
 begin
   Len := High(Playlists);
-  
+
   if (Length(PLNames) <> Len + 1) then
     exit;
 

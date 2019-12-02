@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UGraphicClasses.pas $
- * $Id: UGraphicClasses.pas 2760 2010-12-15 10:02:08Z brunzelchen $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UGraphicClasses;
@@ -36,6 +33,7 @@ interface
 uses
   UTexture,
   ULog,
+  UIni,
   SDL2;
 
 const
@@ -93,11 +91,12 @@ type
    Particle      : array of TParticle;
    LastTime      : cardinal;
    RecArray      : array of RectanglePositions;
-   TwinkleArray  : array[0..5] of real; // store x-position of last twinkle for every player
+   TwinkleArray  : array[0..UIni.IMaxPlayerCount-1] of real; // store x-position of last twinkle for every player
    PerfNoteArray : array of PerfectNotePositions;
 
    FlareTex: TTexture;
-
+   Tex_Note_Star: TTexture;
+   Tex_Note_Perfect_Star: TTexture;
    constructor Create;
    destructor  Destroy; override;
    procedure Draw;
@@ -131,7 +130,6 @@ uses
   UCommon,
   UDrawTexture,
   UGraphic,
-  UIni,
   UNote,
   USkins,
   UThemes;
@@ -162,7 +160,7 @@ begin
   case cStarType of
     GoldenNote:
         begin
-          Tex := Tex_Note_Star.TexNum;
+          Tex := GoldenRec.Tex_Note_Star.TexNum;
           W := 20;
           H := 20;
           SetLength(Scale,4);
@@ -188,9 +186,9 @@ begin
         end;
     PerfectNote:
         begin
-          Tex := Tex_Note_Perfect_Star.TexNum;
-          W := 30;
-          H := 30;
+          Tex := GoldenRec.Tex_Note_Perfect_Star.TexNum;
+          W := 8;
+          H := 12;
           SetLength(Col,1);
           Col[0].r := 1;
           Col[0].g := 1;
@@ -198,7 +196,7 @@ begin
         end;
     NoteHitTwinkle:
         begin
-          Tex := Tex_Note_Star.TexNum;
+          Tex := GoldenRec.Tex_Note_Star.TexNum;
           Alpha := (Live/16);  // linear fade-out
           W := 15;
           H := 15;
@@ -209,37 +207,28 @@ begin
         end;
     PerfectLineTwinkle:
         begin
-          Tex := Tex_Note_Star.TexNum;
+          Tex := GoldenRec.Tex_Note_Star.TexNum;
           W := RandomRange(10,20);
           H := W;
           SizeMod := (-cos((Frame+1)*5*2*pi/16)*0.5+1.1);
           SurviveSentenceChange := True;
           // assign colours according to player given
           SetLength(Scale,3);
-          Scale[1] := 0.3;
-          Scale[2] := 0.2;
+          Scale[1] := 1; //border color
+          Scale[2] := 1; //fill color
           SetLength(Col,3);
-          case Player of
-            0: LoadColor(Col[0].r,Col[0].g,Col[0].b,'P1Light');
-            1: LoadColor(Col[0].r,Col[0].g,Col[0].b,'P2Light');
-            2: LoadColor(Col[0].r,Col[0].g,Col[0].b,'P3Light');
-            3: LoadColor(Col[0].r,Col[0].g,Col[0].b,'P4Light');
-            4: LoadColor(Col[0].r,Col[0].g,Col[0].b,'P5Light');
-            5: LoadColor(Col[0].r,Col[0].g,Col[0].b,'P6Light');
-            else LoadColor(Col[0].r,Col[0].g,Col[0].b,'P1Light');
-          end;
           Col[1].r := 1;
           Col[1].g := 1;
-          Col[1].b := 0.4;
-          Col[2].r := Col[0].r+0.5;
-          Col[2].g := Col[0].g+0.5;
-          Col[2].b := Col[0].b+0.5;
+          Col[1].b := 1;
+          Col[2].r := Col[1].r;
+          Col[2].g := Col[1].g;
+          Col[2].b := Col[1].b;
           mX := RandomRange(-5,5);
           mY := RandomRange(-5,5);
         end;
     ColoredStar:
         begin
-          Tex := Tex_Note_Star.TexNum;
+          Tex := GoldenRec.Tex_Note_Star.TexNum;
           W := RandomRange(10,20);
           H := W;
           SizeMod := (-cos((Frame+1)*5*2*pi/16)*0.5+1.1);
@@ -255,7 +244,7 @@ begin
         end;
     Flare:
         begin
-          Tex := Tex_Note_Star.TexNum;
+          Tex := GoldenRec.Tex_Note_Star.TexNum;
           W := 7;
           H := 7;
           SizeMod := (-cos((Frame+1)*5*2*pi/16)*0.5+1.1);
@@ -285,7 +274,7 @@ begin
         end;
     else    // just some random default values
         begin
-          Tex := Tex_Note_Star.TexNum;
+          Tex := GoldenRec.Tex_Note_Star.TexNum;
           Alpha := 1;
           W := 20;
           H := 20;
@@ -368,7 +357,7 @@ begin
 	  glBindTexture(GL_TEXTURE_2D, Tex);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
-	
+
     // this draws (multiple) texture(s) of our particle
     for L := 0 to High(Col) do
     begin
@@ -381,7 +370,7 @@ begin
         glTexCoord2f((1/16) * Frame, 1);          glVertex2f(X+W*Scale[L]*SizeMod, Y-H*Scale[L]*SizeMod);
       glEnd;
     end;
-	
+
 	  glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -402,6 +391,8 @@ begin
   begin
     TwinkleArray[c] := 0;
   end;
+  Self.Tex_Note_Perfect_Star := Texture.LoadTexture('NotePerfectStar', TEXTURE_TYPE_TRANSPARENT, 0);
+  Self.Tex_Note_Star := Texture.LoadTexture('NoteStar', TEXTURE_TYPE_TRANSPARENT, $FFFFFF);
 end;
 
 destructor TEffectManager.Destroy;
@@ -791,4 +782,3 @@ begin
 end;
 
 end.
-

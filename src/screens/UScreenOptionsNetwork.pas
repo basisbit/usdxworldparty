@@ -1,27 +1,25 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL:  $
- * $Id: $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
+
 
 unit UScreenOptionsNetwork;
 
@@ -67,7 +65,7 @@ type
     EncryptPassword: UTF8String;
 
     InsertButton: integer;
-    
+
     public
       constructor Create; override;
       function ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean; override;
@@ -81,10 +79,11 @@ type
 implementation
 
 uses
+  SysUtils,
   UGraphic,
   ULanguage,
-  UUnicodeUtils,
-  SysUtils;
+  UScreenPopup,
+  UUnicodeUtils;
 
 var
   Receive_String: widestring;
@@ -96,7 +95,7 @@ var I:LongInt;
 begin
   Result:= ( ItemSize * ItemCount );
   for I:=0 to Result-1 do
-    Receive_String := Receive_String + IncomingData[I];
+    Receive_String := Receive_String + widechar(IncomingData[I]);
 end;
 
 procedure OnDeleteUser(Value: boolean; Data: Pointer);
@@ -488,7 +487,7 @@ begin
 
     AddButton(Theme.OptionsNetwork.ButtonExit);
     if (Length(Button[0].Text)=0) then
-      AddButtonText(20, 5, Theme.Options.Description[10]);
+      AddButtonText(20, 5, Theme.Options.Description[OPTIONS_DESC_INDEX_BACK]);
 
     InsertButton := AddButton(Theme.OptionsNetwork.ButtonInsert);
 
@@ -501,6 +500,8 @@ var
   I, J: integer;
 begin
   inherited;
+  if not Assigned(UGraphic.ScreenPopupInsertUser) then //load the screen only the first time
+    UGraphic.ScreenPopupInsertUser := TScreenPopupInsertUser.Create();
 
   CurrentWebsiteIndex := 0;
   CurrentUserIndex := 0;
@@ -534,7 +535,6 @@ begin
   end;
 
   Interaction := 0;
-
 end;
 
 procedure TScreenOptionsNetwork.UpdateUsernameList(ResetIndex: boolean);
@@ -670,4 +670,3 @@ begin
 end;
 
 end.
-

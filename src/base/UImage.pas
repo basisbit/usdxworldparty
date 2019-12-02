@@ -1,26 +1,23 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/base/UImage.pas $
- * $Id: UImage.pas 1939 2009-11-09 00:27:55Z s_alexander $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
 
 unit UImage;
@@ -537,27 +534,11 @@ end;
  * Loads an image from the given file
  *)
 function LoadImage(const Filename: IPath): PSDL_Surface;
-var
-  FilenameCaseAdj: IPath;
 begin
-  Result := nil;
-
-  // try to adjust filename's case and check if it exists
-  FilenameCaseAdj := Filename.AdjustCase(false);
-  if (not FilenameCaseAdj.IsFile) then
-  begin
-    Log.LogError('Image-File does not exist "' + FilenameCaseAdj.ToNative + '"', 'LoadImage');
-    Exit;
-  end;
-
-  // load from file
-  try
-    Result := IMG_Load(PChar(FilenameCaseAdj.ToUTF8())); //SDL2 uses wants UTF-8 strings according to doocumentation
-    // Note: TBinaryFileStream is freed by SDLStream. SDLStream by IMG_Load_RW().
-  except
-    Log.LogError('Could not load from file "' + FilenameCaseAdj.ToNative + '"', 'LoadImage');
-    Exit;
-  end;
+  Result := IMG_Load(PChar(Filename.ToUTF8())); //SDL2 uses wants UTF-8 strings according to doocumentation
+  // Note: TBinaryFileStream is freed by SDLStream. SDLStream by IMG_Load_RW().
+  if not Assigned(Result) then
+    Log.LogError(SDL_GetError(), 'LoadImage');
 end;
 
 (*******************************************************
@@ -566,7 +547,7 @@ end;
 
 function PixelFormatEquals(fmt1, fmt2: PSDL_PixelFormat): boolean;
 begin
-  Result := 
+  Result :=
     (fmt1^.BitsPerPixel  = fmt2^.BitsPerPixel)  and
     (fmt1^.BytesPerPixel = fmt2^.BytesPerPixel) and
     (fmt1^.Rloss = fmt2^.Rloss)   and (fmt1^.Gloss = fmt2^.Gloss)   and (fmt1^.Bloss = fmt2^.Bloss)   and
@@ -621,8 +602,8 @@ procedure ColorizeImage(ImgSurface: PSDL_Surface; NewColor: longword);
   // hsv color is converted back to rgb space.
   // For the conversion algorithms of colors from rgb to hsv space
   // and back simply check the wikipedia.
-  // In order to speed up starting time of USDX the division of reals is 
-  // replaced by division of longints, shifted by 10 bits to keep 
+  // In order to speed up starting time of USDX the division of reals is
+  // replaced by division of longints, shifted by 10 bits to keep
   // digits.
 
   // The use of longwards leeds to some type size mismatch warnings
@@ -702,14 +683,14 @@ begin
                    + IntToStr(ImgSurface^.format.BytesPerPixel));
   end;
 
-  // Check whether the new color is white, grey or black, 
+  // Check whether the new color is white, grey or black,
   // because a greyscale must be created in a different
   // way.
 
   Red   := ((NewColor and $ff0000) shr 16); // R
   Green := ((NewColor and   $ff00) shr  8); // G
   Blue  :=  (NewColor and     $ff)        ; // B
-  
+
   if (Red = Green) and (Green = Blue) then // greyscale image
   begin
     // According to these recommendations (ITU-R BT.709-5)

@@ -1,27 +1,25 @@
-{* UltraStar Deluxe - Karaoke Game
- *
- * UltraStar Deluxe is the legal property of its developers, whose names
- * are too numerous to list here. Please refer to the COPYRIGHT
- * file distributed with this source distribution.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301, USA.
- *
- * $URL: https://ultrastardx.svn.sourceforge.net/svnroot/ultrastardx/trunk/src/screens/UScreenPartyOptions.pas $
- * $Id: UScreenPartyOptions.pas 2146 2010-02-22 18:27:15Z k-m_schindler $
+{*
+    UltraStar Deluxe WorldParty - Karaoke Game
+
+	UltraStar Deluxe WorldParty is the legal property of its developers,
+	whose names	are too numerous to list here. Please refer to the
+	COPYRIGHT file distributed with this source distribution.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. Check "LICENSE" file. If not, see
+	<http://www.gnu.org/licenses/>.
  *}
+
 
 unit UScreenPartyOptions;
 
@@ -51,7 +49,6 @@ type
       SelectLevel:     cardinal;
       SelectPlayList:  cardinal;
       SelectPlayList2: cardinal;
-      SelectRounds:    cardinal;
 
       ILevel:     array of UTF8String;
       IPlaylist:  array of UTF8String;
@@ -83,14 +80,23 @@ implementation
 
 uses
   UGraphic,
-  UMain,
   UIni,
-  UTexture,
   ULanguage,
+  UMain,
   UParty,
-  USong,
   UPlaylist,
+  UScreenPartyNewRound,
+  UScreenPartyScore,
+  UScreenPartyWin,
+  UScreenPartyPlayer,
+  UScreenPartyRounds,
+  UScreenPartyTournamentRounds,
+  UScreenPartyTournamentPlayer,
+  UScreenPartyTournamentOptions,
+  UScreenPartyTournamentWin,
+  USong,
   USongs,
+  UTexture,
   UUnicodeUtils;
 
 function TScreenPartyOptions.ParseInput(PressedKey: cardinal; CharCode: UCS4Char; PressedDown: boolean): boolean;
@@ -133,8 +139,8 @@ begin
           case Mode of
             0: InitClassic;
             1: InitFree;
-            2: InitChallenge;
-            3: InitTournament;
+            2: InitTournament; 
+           // 3: InitChallenge; // hidden for the moment. Check again in the future
           end;
 
         end;
@@ -246,14 +252,12 @@ procedure TScreenPartyOptions.FillLevel;
 begin
   SetLength(ILevel, 3);
 
-  ILevel[0] := Language.Translate('SING_EASY');
-  ILevel[1] := Language.Translate('SING_MEDIUM');
-  ILevel[2] := Language.Translate('SING_HARD');
+  ILevel[0] := Language.Translate('OPTION_VALUE_EASY');
+  ILevel[1] := Language.Translate('OPTION_VALUE_MEDIUM');
+  ILevel[2] := Language.Translate('OPTION_VALUE_HARD');
 end;
 
 procedure TScreenPartyOptions.SetPlaylists;
-var
-  I: integer;
 begin
   if (Mode = 1) or (Mode = 2) or (Mode = 3) then
   begin
@@ -311,7 +315,14 @@ begin
           IPlaylist2[0] := 'No Categories found';
         end;
       end;
-    2:
+
+    2: 
+      begin
+        SetLength(IPlaylist2, 1);
+        IPlaylist2[0] := '---';
+      end;
+      
+   { 3: //Challenge mode desactivated for the moment
       begin
         if (Length(PlaylistMan.Playlists) > 0) then
         begin
@@ -323,12 +334,7 @@ begin
           SetLength(IPlaylist2, 1);
           IPlaylist2[0] := 'No Playlists found';
         end;
-      end;
-    3:
-      begin
-        SetLength(IPlaylist2, 1);
-        IPlaylist2[0] := '---';
-      end;
+      end; }
   end;
 
   Playlist2 := 0;
@@ -338,7 +344,14 @@ end;
 procedure TScreenPartyOptions.OnShow;
 begin
   inherited;
-
+  if not Assigned(UGraphic.ScreenPartyNewRound) then //load the screens only the first time
+  begin
+    UGraphic.ScreenPartyNewRound := TScreenPartyNewRound.Create();
+    UGraphic.ScreenPartyScore := TScreenPartyScore.Create();
+    UGraphic.ScreenPartyWin := TScreenPartyWin.Create();
+    UGraphic.ScreenPartyPlayer := TScreenPartyPlayer.Create();
+    UGraphic.ScreenPartyRounds := TScreenPartyRounds.Create();
+  end;
   Party.Clear;
 
   // check if there are loaded modes
@@ -416,6 +429,13 @@ procedure TScreenPartyOptions.InitTournament;
 begin
   ScreenSong.Mode := smPartyTournament;
   AudioPlayback.PlaySound(SoundLib.Start);
+  if not Assigned(UGraphic.ScreenPartyTournamentRounds) then //load the screens only the first time
+  begin
+    UGraphic.ScreenPartyTournamentRounds := TScreenPartyTournamentRounds.Create();
+    UGraphic.ScreenPartyTournamentPlayer := TScreenPartyTournamentPlayer.Create();
+    UGraphic.ScreenPartyTournamentOptions := TScreenPartyTournamentOptions.Create();
+    UGraphic.ScreenPartyTournamentWin := TScreenPartyTournamentWin.Create();
+  end;
   FadeTo(@ScreenPartyTournamentPlayer);
 end;
 
@@ -426,4 +446,3 @@ begin
 end;
 
 end.
-
